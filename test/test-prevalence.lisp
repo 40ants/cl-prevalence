@@ -12,11 +12,13 @@
 
 (in-package :cl-prevalence)
 
-(defvar *test-system*)
+(defparameter *test-system-directory* (pathname "/tmp/test-prevalence-system/"))
+
+(defvar *test-system* nil)
 
 ;; Create a new prevalence system for testing purposes
 
-(let ((directory (pathname "/tmp/test-prevalence-system/")))
+(let ((directory *test-system-directory*))
   ;; Throw away any xml files that we find: we want to start from scratch
   (when (probe-file directory)
     (dolist (pathname (directory (merge-pathnames "*.xml" directory)))
@@ -83,8 +85,8 @@
 ;; Throw away the previous prevalence instance and start over,
 ;; counting on a restore operation using the transaction log
 
-(let ((directory (pathname "/tmp/test-prevalence-system/")))
-  (setf *test-system* (make-prevalence-system directory)))
+(close-open-streams *test-system*)
+(setf *test-system* (make-prevalence-system *test-system-directory*))
 
 (let ((person (gethash *jlp* (get-root-object *test-system* :persons))))
   (assert (eq (class-of person) (find-class 'person)))
@@ -103,8 +105,8 @@
 ;; Throw away the previous prevalence instance and start over,
 ;; counting on a restore operation using the snapshot
 
-(let ((directory (pathname "/tmp/test-prevalence-system/")))
-  (setf *test-system* (make-prevalence-system directory)))
+(close-open-streams *test-system*)
+(setf *test-system* (make-prevalence-system *test-system-directory*))
 
 (let ((person (gethash *jlp* (get-root-object *test-system* :persons))))
   (assert (eq (class-of person) (find-class 'person)))
@@ -129,8 +131,8 @@
 ;; Throw away the previous prevalence instance and start over,
 ;; counting on a restore operation using both the snapshot and the transaction log
 
-(let ((directory (pathname "/tmp/test-prevalence-system/")))
-  (setf *test-system* (make-prevalence-system directory)))
+(close-open-streams *test-system*)
+(setf *test-system* (make-prevalence-system *test-system-directory*))
 
 (let ((person (gethash *jlp* (get-root-object *test-system* :persons))))
   (assert (eq (class-of person) (find-class 'person)))
@@ -156,9 +158,10 @@
   (setf *guard* t)
   (funcall thunk))
 
-(let ((directory (pathname "/tmp/test-prevalence-system/")))
-  (setf *test-system* (make-prevalence-system directory :prevalence-system-class 'guarded-prevalence-system))
-  (setf (get-guard *test-system*) #'guard))
+(close-open-streams *test-system*)
+(setf *test-system* (make-prevalence-system *test-system-directory* 
+                                            :prevalence-system-class 'guarded-prevalence-system))
+(setf (get-guard *test-system*) #'guard)
 
 (let (new-person)
   (setf *guard* nil)
