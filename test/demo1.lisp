@@ -71,4 +71,17 @@
     (setf system (time (make-prevalence-system *system-location*)))
     (close-open-streams system)))
 
+(defun benchmark2 ()
+  (let (system)
+    (setf system (make-prevalence-system *system-location* 
+                                         :init-args '(:serializer serialize-sexp 
+                                                      :deserializer deserialize-sexp 
+                                                      :file-extension "sexp")))
+    (totally-destroy system)
+    (execute system (make-transaction 'tx-create-numbers-root))
+    (time (dotimes (i 10000) (execute system (make-transaction 'tx-add-number i))))
+    (close-open-streams system)
+    (setf system (time (make-prevalence-system *system-location*)))
+    (close-open-streams system)))
+
 ;;;; eof

@@ -14,12 +14,12 @@
 
 ;;; Public API: Functions and Generic Functions
 
-(defun make-prevalence-system (directory &key (prevalence-system-class 'prevalence-system))
+(defun make-prevalence-system (directory &key (prevalence-system-class 'prevalence-system) init-args)
   "Create and return a new prevalence system on directory. When the
   directory contains a valid snapshot and/or transaction log file, the
   system will be restored. Optionally specify the prevalence system's
   class."
-  (make-instance prevalence-system-class :directory directory))
+  (apply #'make-instance prevalence-system-class :directory directory init-args))
 
 (defun make-transaction (function &rest args)
   "Create and return a new transaction specifying a function name and
@@ -87,12 +87,15 @@
 			   :initform nil)
    (serializer ;; type function
                :accessor get-serializer
+               :initarg :serializer
                :initform #'serialize-xml)
    (deserializer ;; type function
                  :accessor get-deserializer
+                 :initarg :deserializer
                  :initform #'deserialize-xml)
    (file-extension ;; type string
                    :accessor get-file-extension
+                   :initarg :file-extension 
                    :initform "xml"))
   (:documentation "Base Prevalence system implementation object"))
 

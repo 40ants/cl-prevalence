@@ -45,8 +45,8 @@
   (reset serialization-state)
   (let ((sexp (read stream nil :eof)))
     (if (eq sexp :eof) 
-        (error "Unexpected end of file while deserializing from s-expression"))
-    (deserialize-sexp-internal sexp (get-hashtable serialization-state))))
+        nil
+      (deserialize-sexp-internal sexp (get-hashtable serialization-state)))))
 
 (defun make-serialization-state ()
   "Create a reusable serialization state to pass as optional argument to [de]serialize-xml"
@@ -102,6 +102,7 @@
 	  ((eq package +keyword-package+) (write-char #\: stream))
 	  (t (write-string (package-name package) stream)
 	     (write-string "::" stream)))
+    ;; this is *NOT* correct for unprintable symbols !!
     (write-string name stream)))
 
 (defmethod serializable-slots ((object structure-object))
