@@ -121,6 +121,8 @@
     (mapcar #'car (if (symbolp (caar slots)) slots (cdr slots))))
   #+cmu
   (mapcar #'pcl:slot-definition-name (pcl:class-slots (class-of object)))
+  #+sbcl
+  (mapcar #'sb-pcl:slot-definition-name (sb-pcl:class-slots (class-of object)))
   #+lispworks
   (structure:structure-class-slot-names (class-of object))
   #+allegro
@@ -138,6 +140,8 @@
 	   (class-of object)))
   #+cmu
   (mapcar #'pcl:slot-definition-name (pcl:class-slots (class-of object)))
+  #+sbcl
+  (mapcar #'sb-pcl:slot-definition-name (sb-pcl:class-slots (class-of object)))
   #+lispworks
   (mapcar #'hcl:slot-definition-name (hcl:class-slots (class-of object)))
   #+allegro
