@@ -12,11 +12,13 @@
 
 (in-package :s-serialization)
 
-(defun serialize-and-deserialize (object)
+(defun serialize-and-deserialize-xml (object)
   (with-input-from-string
     (in (with-output-to-string (out)
 	  (serialize-xml object out)))
-    (deserialize-xml in))
+    (deserialize-xml in)))
+
+(defun serialize-and-deserialize-sexp (object)
   (with-input-from-string
     (in (with-output-to-string (out)
 	  (serialize-sexp object out)))
@@ -25,46 +27,97 @@
 ;; primitives
 
 (assert
- (null (serialize-and-deserialize nil)))
+ (null (serialize-and-deserialize-xml nil)))
 
 (assert
- (eq (serialize-and-deserialize t)
+ (null (serialize-and-deserialize-sexp nil)))
+
+(assert
+ (eq (serialize-and-deserialize-xml t)
      t))
 
 (assert
- (= (serialize-and-deserialize 100)
+ (eq (serialize-and-deserialize-sexp t)
+     t))
+
+(assert
+ (= (serialize-and-deserialize-xml 100)
     100))
 
 (assert
- (= (serialize-and-deserialize (/ 3))
+ (= (serialize-and-deserialize-sexp 100)
+    100))
+
+(assert
+ (= (serialize-and-deserialize-xml (/ 3))
     (/ 3)))
 
 (assert
- (= (serialize-and-deserialize pi)
+ (= (serialize-and-deserialize-sexp (/ 3))
+    (/ 3)))
+
+(assert
+ (= (serialize-and-deserialize-xml pi)
     pi))
 
 (assert
- (= (serialize-and-deserialize (complex 1.5 2.5))
+ (= (serialize-and-deserialize-sexp pi)
+    pi))
+
+(assert
+ (= (serialize-and-deserialize-xml (complex 1.5 2.5))
     (complex 1.5 2.5)))
 
 (assert
- (eq (serialize-and-deserialize 'foo)
+ (= (serialize-and-deserialize-sexp (complex 1.5 2.5))
+    (complex 1.5 2.5)))
+
+(assert
+ (eq (serialize-and-deserialize-xml 'foo)
      'foo))
 
 (assert
- (eq (serialize-and-deserialize :foo)
+ (eq (serialize-and-deserialize-sexp 'foo)
+     'foo))
+
+(assert
+ (eq (serialize-and-deserialize-xml :foo)
      :foo))
 
 (assert
- (eq (serialize-and-deserialize 'room)
+ (eq (serialize-and-deserialize-sexp :foo)
+     :foo))
+
+(assert
+ (eq (serialize-and-deserialize-xml 'room)
      'room))
 
 (assert
- (equal (serialize-and-deserialize "Hello")
+ (eq (serialize-and-deserialize-sexp 'room)
+     'room))
+
+(assert
+ (equal (serialize-and-deserialize-xml "Hello")
 	"Hello"))
 
 (assert
- (equal (serialize-and-deserialize "Hello <foo> & </bar>!")
+ (equal (serialize-and-deserialize-sexp "Hello")
+	"Hello"))
+
+(assert 
+ (equal (serialize-and-deserialize-xml "")
+        ""))
+
+(assert 
+ (equal (serialize-and-deserialize-sexp "")
+        ""))
+
+(assert
+ (equal (serialize-and-deserialize-xml "Hello <foo> & </bar>!")
+	"Hello <foo> & </bar>!"))
+
+(assert
+ (equal (serialize-and-deserialize-sexp "Hello <foo> & </bar>!")
 	"Hello <foo> & </bar>!"))
 
 ;; simple sequences
@@ -73,11 +126,22 @@
  (reduce #'(lambda (x &optional (y t)) (and x y))
 	 (map 'list
 	      #'eql
-	      (serialize-and-deserialize (list 1 2 3))
+	      (serialize-and-deserialize-xml (list 1 2 3))
 	      (list 1 2 3))))
 
 (assert
- (equal (serialize-and-deserialize (list 1 2 3))
+ (reduce #'(lambda (x &optional (y t)) (and x y))
+	 (map 'list
+	      #'eql
+	      (serialize-and-deserialize-sexp (list 1 2 3))
+	      (list 1 2 3))))
+
+(assert
+ (equal (serialize-and-deserialize-xml (list 1 2 3))
+	(list 1 2 3)))
+
+(assert
+ (equal (serialize-and-deserialize-sexp (list 1 2 3))
 	(list 1 2 3)))
 
 ;; simple objects
@@ -89,7 +153,13 @@
 (defparameter *foobar* (make-instance 'foobar :foo 100 :bar "Bar"))
 
 (assert
- (let ((foobar (serialize-and-deserialize *foobar*)))
+ (let ((foobar (serialize-and-deserialize-xml *foobar*)))
+   (and (equal (get-foo foobar) (get-foo *foobar*))
+	(equal (get-bar foobar) (get-bar *foobar*))
+	(eq (class-of foobar) (class-of *foobar*)))))
+
+(assert
+ (let ((foobar (serialize-and-deserialize-sexp *foobar*)))
    (and (equal (get-foo foobar) (get-foo *foobar*))
 	(equal (get-bar foobar) (get-bar *foobar*))
 	(eq (class-of foobar) (class-of *foobar*)))))
@@ -103,7 +173,13 @@
 (defparameter *foobaz* (make-foobaz :foo 100 :baz "Baz"))
 
 (assert
- (let ((foobaz (serialize-and-deserialize *foobaz*)))
+ (let ((foobaz (serialize-and-deserialize-xml *foobaz*)))
+   (and (foobaz-p foobaz)
+	(equal (foobaz-foo foobaz) (foobaz-foo *foobaz*))
+	(equal (foobaz-baz foobaz) (foobaz-baz *foobaz*)))))
+
+(assert
+ (let ((foobaz (serialize-and-deserialize-sexp *foobaz*)))
    (and (foobaz-p foobaz)
 	(equal (foobaz-foo foobaz) (foobaz-foo *foobaz*))
 	(equal (foobaz-baz foobaz) (foobaz-baz *foobaz*)))))
@@ -118,7 +194,12 @@
     hashtable))
 
 (let (h2)
-  (setf h2 (serialize-and-deserialize *hashtable*))
+  (setf h2 (serialize-and-deserialize-xml *hashtable*))
+  (maphash #'(lambda (k v) (assert (equal v (gethash k h2)))) *hashtable*) 
+  (maphash #'(lambda (k v) (assert (equal v (gethash k *hashtable*)))) h2))
+
+(let (h2)
+  (setf h2 (serialize-and-deserialize-sexp *hashtable*))
   (maphash #'(lambda (k v) (assert (equal v (gethash k h2)))) *hashtable*) 
   (maphash #'(lambda (k v) (assert (equal v (gethash k *hashtable*)))) h2))
 
