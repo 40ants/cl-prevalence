@@ -58,18 +58,19 @@
     (when index
       (gethash id index))))
 
-(defgeneric find-object-with-slot (system class slot value)
-  (:documentation "Find and return the object in system of class with slot, null if not found"))
+(defgeneric find-object-with-slot (system class slot value &optional (test #'equalp))
+  (:documentation "Find and return the object in system of class with slot equal to value, null if not found"))
 
-(defmethod find-object-with-slot ((system prevalence-system) class slot value)
-  "Find and return the object in system of class with slot, null if not found.
-   This constitutes some duplicated effort with FIND-OBJECT-WITH-ID."
+(defmethod find-object-with-slot ((system prevalence-system) class slot value &optional (test #'equalp))
+  "Find and return the object in system of class with slot equal to value, null if not found"
   (let* ((index-name (get-objects-slot-index-name class slot))
 	 (index (get-root-object system index-name)))
-    (when index
-      (find-object-with-id system class (gethash value index)))))
+    (if index
+        (find-object-with-id system class (gethash value index))
+      (find value (find-all-objects system class) 
+            :key #'(lambda (object) (slot-value object slot)) :test test))))
 
-(defun tx-create-objects-slot-index (system class slot &optional (test 'equalp))
+(defun tx-create-objects-slot-index (system class slot &optional (test #'equalp))
   "Create an index for this object on this slot, with an optional test for the hash table (add existing objects)"
   (let ((index-name (get-objects-slot-index-name class slot)))
     (unless (get-root-object system index-name)
