@@ -74,6 +74,9 @@
    #:get-preference
    #:all-preferences-keys
    #:tx-set-preference
+   #:index-on
+   #:drop-index-on
+   #:find-object-with-slot
 
    #:start-master-client
    #:stop-master-client
