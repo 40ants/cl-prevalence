@@ -96,7 +96,14 @@
    (file-extension ;; type string
                    :accessor get-file-extension
                    :initarg :file-extension 
-                   :initform "xml"))
+                   :initform "xml")
+   (serialization-state ;; type serialization-state
+                        :reader get-serialization-state
+                        :initform (make-serialization-state))
+   (transaction-hook ;; type function
+                     :accessor get-transaction-hook
+                     :initarg :transaction-hook
+                     :initform #'identity))
   (:documentation "Base Prevalence system implementation object"))
 
 (defclass guarded-prevalence-system (prevalence-system)
@@ -190,8 +197,6 @@
 (defmethod remove-root-object ((system prevalence-system) name)
   (remhash name (get-root-objects system)))
 
-(defparameter *serialization-state* (make-serialization-state))
-
 (defmethod execute ((system prevalence-system) (transaction transaction))
   "Execute a transaction on a system and log it to the transaction log"
   (let ((result
@@ -202,12 +207,20 @@
                                              ";; Notice: system rollback/restore due to error (~a)~%" 
                                              condition)
 				     (restore system)))))
-	   (execute-on transaction system)))
-	 (out (get-transaction-log-stream system)))
-    (funcall (get-serializer system) transaction out *serialization-state*)
-    (terpri out)
-    (finish-output out)
+	   (execute-on transaction system))))
+    (log-transaction system transaction)
     result))
+
+(defmethod log-transaction ((system prevalence-system) (transaction transaction))
+  "Log transaction for system"
+  (let ((out (get-transaction-log-stream system)))
+    (funcall (get-serializer system) transaction out (get-serialization-state system))
+    (terpri out)
+    (finish-output out)))
+
+(defmethod log-transaction :after ((system prevalence-system) (transaction transaction))
+  "Execute the transaction-hook"
+  (funcall (get-transaction-hook system) transaction))
 
 (defmethod query ((system prevalence-system) function &rest args)
   "Execute an exclusive query function on a sytem"
@@ -230,7 +243,7 @@
                                            snapshot)))
     (with-open-file (out snapshot
 			 :direction :output :if-does-not-exist :create :if-exists :supersede)
-      (funcall (get-serializer system) (get-root-objects system) out *serialization-state*))
+      (funcall (get-serializer system) (get-root-objects system) out (get-serialization-state system)))
     (when (probe-file transaction-log)
       (copy-file transaction-log (merge-pathnames (make-pathname :name (get-transaction-log-filename timetag)
                                                                  :type (get-file-extension system))
@@ -261,7 +274,7 @@
   (close-open-streams system)
   (when (probe-file (get-snapshot system))
     (with-open-file (in (get-snapshot system) :direction :input)
-      (setf (get-root-objects system) (funcall (get-deserializer system) in *serialization-state*))))
+      (setf (get-root-objects system) (funcall (get-deserializer system) in (get-serialization-state system)))))
   (when (probe-file (get-transaction-log system))
     (let ((position 0))
       (handler-bind ((s-xml:xml-parser-error 
@@ -273,7 +286,7 @@
                           (return-from restore))))
 	(with-open-file (in (get-transaction-log system) :direction :input)
 	  (loop
-	   (let ((transaction (funcall (get-deserializer system) in *serialization-state*)))
+	   (let ((transaction (funcall (get-deserializer system) in (get-serialization-state system))))
 	     (setf position (file-position in))
 	     (if transaction
 		 (execute-on transaction system)
@@ -316,11 +329,11 @@
 
 (defmethod get-transaction-log-filename ((system prevalence-system) &optional suffix)
   "Return the name of the transaction-log filename, optionally using a suffix"
-  (format nil "transaction-log@[-~a]" suffix))
+  (format nil "transaction-log~@[-~a~]" suffix))
 
 (defmethod get-snapshot-filename ((system prevalence-system) &optional suffix)
   "Return the name of the snapshot filename, optionally using a suffix"
-  (format nil "snapshot@[-~a]" suffix))
+  (format nil "snapshot~@[-~a~]" suffix))
 
 ;;; Some file manipulation utilities
 
