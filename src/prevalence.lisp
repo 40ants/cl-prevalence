@@ -367,6 +367,11 @@
 	 (write-sequence buffer out :end read-count)
 	 (when (< read-count 4096) (return)))))))
   
+;;; from the serialization package 
+
+(defmethod reset-known-slots ((system prevalence-system) &optional class)
+  (reset-known-slots (get-serialization-state system) class))
+
 ;;; extra documentation
 
 (setf (documentation 'get-guard 'function) "Access the guard function of a sytem")

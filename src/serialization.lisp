@@ -52,6 +52,9 @@
   "Create a reusable serialization state to pass as optional argument to [de]serialize-xml"
   (make-instance 'serialization-state))
 
+(defgeneric reset-known-slots (serialization-state &optional class)
+  (:documentation "Clear the caching of known slots for class, or for all classes if class is nil"))
+
 ;;; Implementation
 
 ;; State and Support
@@ -74,6 +77,12 @@
   (with-slots (hashtable counter) serialization-state
     (clrhash hashtable)
     (setf counter 0)))
+
+(defmethod reset-known-slots ((serialization-state serialization-state) &optional class)
+  (with-slots (known-slots) serialization-state
+    (if class
+        (remhash (if (symbolp class) class (class-name class)) known-slots)
+      (clrhash known-slots))))
 
 (defmethod known-object-id ((serialization-state serialization-state) object)
   (gethash object (get-hashtable serialization-state)))
