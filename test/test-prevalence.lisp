@@ -34,12 +34,6 @@
 
 ;; Some basic functions to construct transactions from
 
-(defun tx-create-id-counter (system)
-  (setf (get-root-object system :id-counter) 0))
-
-(defun tx-get-next-id (system)
-  (incf (get-root-object system :id-counter)))
-
 (defun tx-create-persons-root (system)
   (setf (get-root-object system :persons) (make-hash-table)))
 
