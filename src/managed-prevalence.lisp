@@ -134,12 +134,12 @@
 	      (index-name (get-objects-slot-index-name class 'id)))
 	  (setf (get-root-object system root-name) (delete object (get-root-object system root-name)))
 	  (remhash id (get-root-object system index-name)))
-      (error "no object of class ~a with id ~d found in ~s" system class id))))
+      (error "no object of class ~a with id ~d found in ~s" class id system))))
 
 (defun tx-change-object-slots (system class id slots-and-values)
   "Change some slots of the object of class with id in system using slots and values"
   (let ((object (find-object-with-id system class id)))
-    (unless object (error "no object of class ~a with id ~d found in ~s" system class id))
+    (unless object (error "no object of class ~a with id ~d found in ~s" class id system))
     (loop :for (slot value) :in slots-and-values
           :do (when (slot-value-changed-p object slot value)
                 (remove-object-from-slot-index system class slot object)
