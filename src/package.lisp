@@ -14,8 +14,8 @@
   (:use :cl)
   (:export
    #:serializable-slots
-   #:serialize-xml
-   #:deserialize-xml
+   #:serialize-xml #:serialize-sexp
+   #:deserialize-xml #:deserialize-sexp
    #:make-serialization-state)
   (:documentation "XML and s-expression based serialization for Common Lisp and CLOS"))
 
@@ -72,6 +72,6 @@
    #:get-preference
    #:all-preferences-keys
    #:tx-set-preference)
-  (:documentation "A proof of concept Common Lisp Prevalence system"))
+  (:documentation "An implementation of Object Prevalence for Common Lisp"))
 
 ;;;; eof
