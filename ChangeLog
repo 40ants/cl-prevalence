@@ -1,0 +1,5 @@
+2005-01-22 Sven Van Caekenberghe <svc@mac.com>
+
+        * added serialization support for characters (suggested by ian eslick) 
+
+

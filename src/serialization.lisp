@@ -204,6 +204,12 @@
   (s-xml:print-string-xml object stream)
   (write-string "</STRING>" stream))
 
+(defmethod serialize-xml-internal ((object character) stream serialization-state)
+  (declare (ignore serialization-state))
+  (write-string "<CHARACTER>" stream)
+  (s-xml:print-string-xml (princ-to-string object) stream)
+  (write-string "</CHARACTER>" stream))
+
 (defmethod serialize-xml-internal ((object symbol) stream serialization-state)
   (declare (ignore serialization-state))
   (write-string "<SYMBOL>" stream)
@@ -219,6 +225,10 @@
   (write-string "T" stream))
 
 (defmethod serialize-sexp-internal ((object string) stream serialization-state)
+  (declare (ignore serialization-state))
+  (prin1 object stream))
+
+(defmethod serialize-sexp-internal ((object character) stream serialization-state)
   (declare (ignore serialization-state))
   (prin1 object stream))
 
@@ -457,6 +467,7 @@
 	  (:null nil)
 	  (:true t)
 	  (:string (or seed ""))
+          (:character (char seed 0))
 	  (:key (car seed))
 	  (:value (car seed))
 	  (:entry (nreverse seed))

@@ -113,6 +113,22 @@
         ""))
 
 (assert
+ (equal (serialize-and-deserialize-xml #\A)
+        #\A))
+
+(assert
+ (equal (serialize-and-deserialize-sexp #\A)
+        #\A))
+
+(assert
+ (equal (serialize-and-deserialize-xml #\<)
+        #\<))
+
+(assert
+ (equal (serialize-and-deserialize-sexp #\<)
+        #\<))
+
+(assert
  (equal (serialize-and-deserialize-xml "Hello <foo> & </bar>!")
 	"Hello <foo> & </bar>!"))
 
