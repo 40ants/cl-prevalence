@@ -435,7 +435,7 @@
 	  ((:float :ratio :complex :symbol) (read-from-string seed))
 	  (:null nil)
 	  (:true t)
-	  (:string seed)
+	  (:string (or seed ""))
 	  (:key (car seed))
 	  (:value (car seed))
 	  (:entry (nreverse seed))
