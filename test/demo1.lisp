@@ -61,18 +61,12 @@
 	   (incf candidate)))
       (close-open-streams system))))
 
-(defun reset-demo1 ()
-  "Throw away any xml files that we find: we want to start from scratch"
-  (when (probe-file *system-location*)
-    (dolist (pathname (directory (merge-pathnames "*.xml" *system-location*)))
-      (delete-file pathname))))
-
 (defun benchmark1 ()
-  (reset-demo1)
   (let (system)
     (setf system (make-prevalence-system *system-location*))
+    (totally-destroy system)
     (execute system (make-transaction 'tx-create-numbers-root))
-    (time (dotimes (i 1000) (execute system (make-transaction 'tx-add-number i))))
+    (time (dotimes (i 10000) (execute system (make-transaction 'tx-add-number i))))
     (close-open-streams system)
     (setf system (time (make-prevalence-system *system-location*)))
     (close-open-streams system)))

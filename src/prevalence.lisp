@@ -64,6 +64,9 @@
 (defgeneric backup (system &key directory)
   (:documentation "Make backup copies of the current snapshot and transaction-log files"))
 
+(defgeneric totally-destroy (system &key abort)
+  (:documentation "Totally destroy system from permanent storage by deleting any files that we find"))
+
 ;;; Classes
 
 (defclass prevalence-system ()
@@ -81,7 +84,16 @@
 		    :accessor get-transaction-log)
    (transaction-log-stream ;; :type stream
 			   :accessor get-transaction-log-stream
-			   :initform nil))
+			   :initform nil)
+   (serializer ;; type function
+               :accessor get-serializer
+               :initform #'serialize-xml)
+   (deserializer ;; type function
+                 :accessor get-deserializer
+                 :initform #'deserialize-xml)
+   (file-extension ;; type string
+                   :accessor get-file-extension
+                   :initform "xml"))
   (:documentation "Base Prevalence system implementation object"))
 
 (defclass guarded-prevalence-system (prevalence-system)
@@ -114,8 +126,11 @@
   (declare (ignore initargs))
   (with-slots (directory) system
     (ensure-directories-exist directory)
-    (setf (get-snapshot system) (merge-pathnames "snapshot.xml" directory)
-	  (get-transaction-log system) (merge-pathnames "transaction-log.xml" directory)))
+    (setf (get-snapshot system) (merge-pathnames (make-pathname :name "snapshot" :type (get-file-extension system)) 
+                                                 directory)
+	  (get-transaction-log system) (merge-pathnames (make-pathname :name "transaction-log"
+                                                                       :type (get-file-extension system))
+                                                        directory)))
   (restore system))
 
 (defmethod get-transaction-log-stream :before ((system prevalence-system))
@@ -134,11 +149,13 @@
       (setf transaction-log-stream nil))))
 
 (defmethod totally-destroy ((system prevalence-system) &key abort)
-  "Totally destroy system from permanent storage by deleting any xml files that we find"
+  "Totally destroy system from permanent storage by deleting any files that we find"
   (close-open-streams system :abort abort)
   (when (probe-file (get-directory system))
-    (dolist (pathname (directory (merge-pathnames "*.xml" (get-directory system))))
-      (delete-file pathname))))
+    (dolist (pathname (directory (merge-pathnames (make-pathname :type (get-file-extension system))
+                                                  (get-directory system))))
+      (delete-file pathname)))
+  (clrhash (get-root-objects system)))
 
 (defmethod print-object ((transaction transaction) stream)
   (format stream "#<TRANSACTION ~a ~a>"
@@ -174,7 +191,7 @@
 				     (restore system)))))
 	   (execute-on transaction system)))
 	 (out (get-transaction-log-stream system)))
-    (serialize-xml transaction out *serialization-state*)
+    (funcall (get-serializer system) transaction out *serialization-state*)
     (terpri out)
     (finish-output out)
     result))
@@ -212,12 +229,16 @@
 	(snapshot (get-snapshot system)))
     (close-open-streams system)
     (when (probe-file snapshot)
-      (copy-file snapshot (merge-pathnames (format nil "snapshot-~a.xml" timetag) snapshot)))
+      (copy-file snapshot (merge-pathnames (make-pathname :name (format nil "snapshot-~a" timetag)
+                                                          :type (get-file-extension system))
+                                           snapshot)))
     (with-open-file (out snapshot
 			 :direction :output :if-does-not-exist :create :if-exists :supersede)
-      (serialize-xml (get-root-objects system) out *serialization-state*))
+      (funcall (get-serializer system) (get-root-objects system) out *serialization-state*))
     (when (probe-file transaction-log)
-      (copy-file transaction-log (merge-pathnames (format nil "transaction-log-~a.xml" timetag) transaction-log))
+      (copy-file transaction-log (merge-pathnames (make-pathname :name (format nil "transaction-log-~a" timetag)
+                                                                 :type (get-file-extension system))
+                                                  transaction-log))
       (delete-file transaction-log))))
 
 (defmethod backup ((system prevalence-system) &key directory)
@@ -225,9 +246,11 @@
   (let* ((timetag (timetag))
 	 (transaction-log (get-transaction-log system))
 	 (snapshot (get-snapshot system))
-	 (transaction-log-backup (merge-pathnames (format nil "transaction-log-~a.xml" timetag)
+	 (transaction-log-backup (merge-pathnames (make-pathname :name (format nil "transaction-log-~a" timetag)
+                                                                 :type (get-file-extension system))
 						  (or directory transaction-log)))
-	 (snapshot-backup (merge-pathnames (format nil "snapshot-~a.xml" timetag)
+	 (snapshot-backup (merge-pathnames (make-pathname :name (format nil "snapshot-~a" timetag)
+                                                          :type (get-file-extension system))
 					   (or directory snapshot))))
     (close-open-streams system)
     (when (probe-file transaction-log)
@@ -242,7 +265,7 @@
   (close-open-streams system)
   (when (probe-file (get-snapshot system))
     (with-open-file (in (get-snapshot system) :direction :input)
-      (setf (get-root-objects system) (deserialize-xml in *serialization-state*))))
+      (setf (get-root-objects system) (funcall (get-deserializer system) in *serialization-state*))))
   (when (probe-file (get-transaction-log system))
     (let ((position 0))
       (handler-bind ((s-xml:xml-parser-error 
@@ -252,7 +275,7 @@
                           (return-from restore))))
 	(with-open-file (in (get-transaction-log system) :direction :input)
 	  (loop
-	   (let ((transaction (deserialize-xml in *serialization-state*)))
+	   (let ((transaction (funcall (get-deserializer system) in *serialization-state*)))
 	     (setf position (file-position in))
 	     (if transaction
 		 (execute-on transaction system)

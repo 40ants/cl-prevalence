@@ -39,6 +39,7 @@
    #:transaction
    #:no-rollback-error
    #:initiates-rollback
+   #:totally-destroy
 
    #:print-transaction-log #:show-transaction-log #:print-snapshot #:transaction-log-tail
 
