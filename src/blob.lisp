@@ -78,7 +78,7 @@
   (with-open-file (out (get-file blob)
 		       :direction :output
 		       :element-type '(unsigned-byte 8)
-		       :if-exists :overwrite
+		       :if-exists :supersede
 		       :if-does-not-exist :create)
     (copy-stream binary-input-stream out)))
 
