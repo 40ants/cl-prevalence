@@ -24,12 +24,12 @@ clean: clean-openmcl clean-lw clean-emacs
 
 PRJ=cl-prevalence
 ACCOUNT=scaekenberghe
-CVSRT=:ext:$ACCOUNT@common-lisp.net:/project/$PRJ/cvsroot
+CVSRT=:ext:$(ACCOUNT)@common-lisp.net:/project/$(PRJ)/cvsroot
 
 release:
-	rm -rf /tmp/$PRJ /tmp/public_html /tmp/$PRJ.tgz /tmp/$PRJ.tgz.asc
-	cd /tmp; cvs -d$CVSRT export -r HEAD $PRJ; cvs -d$CVSRT export -r HEAD public_html
-	mv /tmp/public_html /tmp/$PRJ/doc
-	cd /tmp; gnutar cvfz $PRJ.tgz $PRJ; gpg -a -b $PRJ.tgz
-	scp /tmp/$PRJ.tgz $ACCOUNT@common-lisp.net:/project/$PRJ/public_html
-	scp /tmp/$PRJ.tgz.asc $ACCOUNT@common-lisp.net:/project/$PRJ/public_html
+	rm -rf /tmp/$(PRJ) /tmp/public_html /tmp/$(PRJ).tgz /tmp/$(PRJ).tgz.asc
+	cd /tmp; cvs -d$(CVSRT) export -r HEAD $(PRJ); cvs -d$(CVSRT) export -r HEAD public_html
+	mv /tmp/public_html /tmp/$(PRJ)/doc
+	cd /tmp; gnutar cvfz $(PRJ).tgz $(PRJ); gpg -a -b $(PRJ).tgz
+	scp /tmp/$(PRJ).tgz $(ACCOUNT)@common-lisp.net:/project/$(PRJ)/public_html
+	scp /tmp/$(PRJ).tgz.asc $(ACCOUNT)@common-lisp.net:/project/$(PRJ)/public_html
