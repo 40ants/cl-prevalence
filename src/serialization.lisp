@@ -124,7 +124,11 @@
   #+lispworks
   (structure:structure-class-slot-names (class-of object))
   #+allegro
-  (mapcar #'mop:slot-definition-name (mop:class-slots (class-of object))))
+  (mapcar #'mop:slot-definition-name (mop:class-slots (class-of object)))
+  #+sbcl
+  (mapcar #'sb-mop:slot-definition-name (sb-mop:class-slots (class-of object)))
+  #-(or openmcl cmu lispworks allegro sbcl)
+  (error "not yet implemented"))
 
 (defmethod serializable-slots ((object standard-object))
   #+openmcl
@@ -137,7 +141,11 @@
   #+lispworks
   (mapcar #'hcl:slot-definition-name (hcl:class-slots (class-of object)))
   #+allegro
-  (mapcar #'mop:slot-definition-name (mop:class-slots (class-of object))))
+  (mapcar #'mop:slot-definition-name (mop:class-slots (class-of object)))
+  #+sbcl
+  (mapcar #'sb-mop:slot-definition-name (sb-mop:class-slots (class-of object)))
+  #-(or openmcl cmu lispworks allegro sbcl)
+  (error "not yet implemented"))
 
 (defmethod get-serializable-slots ((serialization-state serialization-state) object)
   (with-slots (known-slots) serialization-state
