@@ -24,7 +24,7 @@
   "Print the transaction objects making up the transaction log of system to t"
   (with-open-file (in (get-transaction-log system) :direction :input)
     (loop
-     (let ((transaction (deserialize-xml in *serialization-state*)))
+     (let ((transaction (deserialize-xml in (get-serialization-state system))))
        (if (null transaction)
 	   (return)
 	 (format t "~a~%" transaction)))))
@@ -41,7 +41,7 @@
   (let (transactions)
     (with-open-file (in (get-transaction-log system) :direction :input)
       (loop
-       (let ((transaction (deserialize-xml in *serialization-state*)))
+       (let ((transaction (deserialize-xml in (get-serialization-state system))))
 	 (if (null transaction)
 	     (return)
 	   (push transaction transactions)))))
