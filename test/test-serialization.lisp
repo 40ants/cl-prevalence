@@ -97,6 +97,14 @@
      'room))
 
 (assert
+ (eq (serialize-and-deserialize-xml '|Unprintable|)
+     '|Unprintable|))
+
+(assert
+ (eq (serialize-and-deserialize-sexp '|Unprintable|)
+     '|Unprintable|))
+
+(assert
  (equal (serialize-and-deserialize-xml "Hello")
 	"Hello"))
 

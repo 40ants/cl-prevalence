@@ -91,28 +91,36 @@
   (setf (gethash object (get-hashtable serialization-state))
         (incf (get-counter serialization-state))))
 
+;; when printing symbols we always add the package and treat the symbol as internal
+;; so that the serialization is independent of future change in export status 
+;; we handling symbols in the common-lisp and keyword package more efficiently
+;; some hacking to handle unprintable symbols is involved
+
 (defconstant +cl-package+ (find-package :cl))
 
 (defconstant +keyword-package+ (find-package :keyword))
 
 (defun print-symbol-xml (symbol stream)
   (let ((package (symbol-package symbol))
-	(name (symbol-name symbol)))
+	(name (prin1-to-string symbol)))
     (cond ((eq package +cl-package+) (write-string "CL:" stream))
 	  ((eq package +keyword-package+) (write-char #\: stream))
 	  (t (s-xml:print-string-xml (package-name package) stream)
 	     (write-string "::" stream)))
-    (s-xml:print-string-xml name stream)))
+    (if (char= (char name (1- (length name))) #\|)
+        (s-xml:print-string-xml name stream :start (position #\| name))
+      (s-xml:print-string-xml name stream :start (1+ (or (position #\: name :from-end t) -1))))))
 
 (defun print-symbol (symbol stream)
   (let ((package (symbol-package symbol))
-	(name (symbol-name symbol)))
+	(name (prin1-to-string symbol)))
     (cond ((eq package +cl-package+) (write-string "CL:" stream))
 	  ((eq package +keyword-package+) (write-char #\: stream))
-	  (t (write-string (package-name package) stream)
+	  (t (s-xml:print-string-xml (package-name package) stream)
 	     (write-string "::" stream)))
-    ;; this is *NOT* correct for unprintable symbols !!
-    (write-string name stream)))
+    (if (char= (char name (1- (length name))) #\|)
+        (write-string name stream :start (position #\| name))
+      (write-string name stream :start (1+ (or (position #\: name :from-end t) -1))))))
 
 (defmethod serializable-slots ((object structure-object))
   #+openmcl
