@@ -30,6 +30,8 @@
      (:file "prevalence" :depends-on ("serialization"))
      (:file "debug-prevalence" :depends-on ("prevalence"))
      (:file "managed-prevalence" :depends-on ("prevalence"))
+     (:file "sysdeps" :depends-on ("package"))
+     (:file "master-slave" :depends-on ("prevalence" "sysdeps"))
      (:file "blob" :depends-on ("managed-prevalence")))))
   :depends-on (:s-xml))
 

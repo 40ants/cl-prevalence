@@ -21,7 +21,7 @@
 
 (defpackage :cl-prevalence
   (:use :cl :s-serialization)
-  #+NIL(:nicknames :clp)
+  #+nil (:nicknames :clp)
   (:export
    #:make-prevalence-system
    #:make-transaction
@@ -72,7 +72,12 @@
    #:tx-change-object-slots
    #:get-preference
    #:all-preferences-keys
-   #:tx-set-preference)
+   #:tx-set-preference
+
+   #:start-master-client
+   #:stop-master-client
+   #:start-slave-server
+   #:stop-slave-server)
   (:documentation "An implementation of Object Prevalence for Common Lisp"))
 
 ;;;; eof
