@@ -122,6 +122,12 @@
   ()
   (:documentation "Thrown by code inside a transaction to indicate that no rollback is needed"))
 
+(defmethod initiates-rollback ((condition condition))
+  t)
+
+(defmethod initiates-rollback ((no-rollback-error no-rollback-error))
+  nil)
+
 ;;; Implementation
 
 (defmethod initialize-instance :after ((system prevalence-system) &rest initargs &key &allow-other-keys)
@@ -129,9 +135,10 @@
   (declare (ignore initargs))
   (with-slots (directory) system
     (ensure-directories-exist directory)
-    (setf (get-snapshot system) (merge-pathnames (make-pathname :name "snapshot" :type (get-file-extension system)) 
+    (setf (get-snapshot system) (merge-pathnames (make-pathname :name (get-snapshot-filename system) 
+                                                                :type (get-file-extension system)) 
                                                  directory)
-	  (get-transaction-log system) (merge-pathnames (make-pathname :name "transaction-log"
+	  (get-transaction-log system) (merge-pathnames (make-pathname :name (get-transaction-log-filename system)
                                                                        :type (get-file-extension system))
                                                         directory)))
   (restore system))
@@ -145,14 +152,14 @@
 					 :if-exists :append)))))
 
 (defmethod close-open-streams ((system prevalence-system) &key abort)
-  "Close all open stream associated with system"
+  "Close all open stream associated with system (optionally aborting operations in progress)"
   (with-slots (transaction-log-stream) system
     (when transaction-log-stream
       (close transaction-log-stream :abort abort)
       (setf transaction-log-stream nil))))
 
 (defmethod totally-destroy ((system prevalence-system) &key abort)
-  "Totally destroy system from permanent storage by deleting any files that we find"
+  "Totally destroy system from permanent storage by deleting any files used by the system, remove all root objects"
   (close-open-streams system :abort abort)
   (when (probe-file (get-directory system))
     (dolist (pathname (directory (merge-pathnames (make-pathname :type (get-file-extension system))
@@ -161,9 +168,10 @@
   (clrhash (get-root-objects system)))
 
 (defmethod print-object ((transaction transaction) stream)
-  (format stream "#<TRANSACTION ~a ~a>"
-	  (get-function transaction)
-	  (or (get-args transaction) "()")))
+  (print-unreadable-object (transaction stream :type t :identity t)
+    (format stream "~a ~a"
+            (get-function transaction)
+            (or (get-args transaction) "()"))))
 
 (defmethod get-root-object ((system prevalence-system) name)
   (gethash name (get-root-objects system)))
@@ -190,7 +198,9 @@
 	 (handler-bind ((error #'(lambda (condition)
 				   (when (and (get-option system :rollback-on-error)
 					      (initiates-rollback condition))
-				     (format t ";; Notice: system rollback/restore due to error (~a)~%" condition)
+				     (format *standard-output* 
+                                             ";; Notice: system rollback/restore due to error (~a)~%" 
+                                             condition)
 				     (restore system)))))
 	   (execute-on transaction system)))
 	 (out (get-transaction-log-stream system)))
@@ -203,27 +213,10 @@
   "Execute an exclusive query function on a sytem"
   (apply function (cons system args)))
 
-(defmethod execute ((system guarded-prevalence-system) (transaction transaction))
-  "Execute a transaction on a sytem controlled by a guard"
-  (funcall (get-guard system)
-	   #'(lambda () (call-next-method system transaction))))
-
-(defmethod query ((system guarded-prevalence-system) function &rest args)
-  "Execute an exclusive query function on a sytem controlled by a guard"
-  (funcall (get-guard system)
-	   #'(lambda () (apply function (cons system args)))))
-
 (defmethod execute-on ((transaction transaction) (system prevalence-system))
   "Execute a transaction itself in the context of a system"
   (apply (get-function transaction)
 	 (cons system (get-args transaction))))
-
-(defun timetag ()
-  (multiple-value-bind (second minute hour date month year)
-      (decode-universal-time (get-universal-time) 0)
-    (format nil
-	    "~d~2,'0d~2,'0dT~2,'0d~2,'0d~2,'0d"
-	    year month date hour minute second)))
 
 (defmethod snapshot ((system prevalence-system))
   "Write to whole system to persistent storage resetting the transaction log"
@@ -232,14 +225,14 @@
 	(snapshot (get-snapshot system)))
     (close-open-streams system)
     (when (probe-file snapshot)
-      (copy-file snapshot (merge-pathnames (make-pathname :name (format nil "snapshot-~a" timetag)
+      (copy-file snapshot (merge-pathnames (make-pathname :name (get-snapshot-filename timetag)
                                                           :type (get-file-extension system))
                                            snapshot)))
     (with-open-file (out snapshot
 			 :direction :output :if-does-not-exist :create :if-exists :supersede)
       (funcall (get-serializer system) (get-root-objects system) out *serialization-state*))
     (when (probe-file transaction-log)
-      (copy-file transaction-log (merge-pathnames (make-pathname :name (format nil "transaction-log-~a" timetag)
+      (copy-file transaction-log (merge-pathnames (make-pathname :name (get-transaction-log-filename timetag)
                                                                  :type (get-file-extension system))
                                                   transaction-log))
       (delete-file transaction-log))))
@@ -249,10 +242,10 @@
   (let* ((timetag (timetag))
 	 (transaction-log (get-transaction-log system))
 	 (snapshot (get-snapshot system))
-	 (transaction-log-backup (merge-pathnames (make-pathname :name (format nil "transaction-log-~a" timetag)
+	 (transaction-log-backup (merge-pathnames (make-pathname :name (get-transaction-log-filename timetag)
                                                                  :type (get-file-extension system))
 						  (or directory transaction-log)))
-	 (snapshot-backup (merge-pathnames (make-pathname :name (format nil "snapshot-~a" timetag)
+	 (snapshot-backup (merge-pathnames (make-pathname :name (get-snapshot-filename timetag)
                                                           :type (get-file-extension system))
 					   (or directory snapshot))))
     (close-open-streams system)
@@ -273,7 +266,9 @@
     (let ((position 0))
       (handler-bind ((s-xml:xml-parser-error 
                       #'(lambda (condition)
-                          (format t ";; Warning: error during transaction log restore: ~s~%" condition)
+                          (format *standard-output* 
+                                  ";; Warning: error during transaction log restore: ~s~%" 
+                                  condition)
                           (truncate-file (get-transaction-log system) position)
                           (return-from restore))))
 	(with-open-file (in (get-transaction-log system) :direction :input)
@@ -283,6 +278,51 @@
 	     (if transaction
 		 (execute-on transaction system)
 	       (return)))))))))
+
+(defmethod execute ((system guarded-prevalence-system) (transaction transaction))
+  "Execute a transaction on a system controlled by a guard"
+  (funcall (get-guard system)
+	   #'(lambda () (call-next-method system transaction))))
+
+(defmethod query ((system guarded-prevalence-system) function &rest args)
+  "Execute an exclusive query function on a sytem controlled by a guard"
+  (funcall (get-guard system)
+	   #'(lambda () (apply function (cons system args)))))
+
+(defmethod snapshot ((system guarded-prevalence-system))
+  "Make a snapshot of a system controlled by a guard"
+  (funcall (get-guard system)
+           #'(lambda () (call-next-method system))))
+
+(defmethod backup ((system guarded-prevalence-system) &key directory)
+  "Do a backup on a system controlled by a guard"
+  (funcall (get-guard system)
+           #'(lambda () (call-next-method system directory))))
+
+(defmethod restore ((system guarded-prevalence-system))
+  "Restore a system controlled by a guard"
+  (funcall (get-guard system)
+           #'(lambda () (call-next-method system))))
+
+;;; Some utilities
+
+(defun timetag (&optional (universal-time (get-universal-time)))
+  "Return a GMT string of universal-time as YYMMDDTHHMMSS"
+  (multiple-value-bind (second minute hour date month year)
+      (decode-universal-time universal-time 0)
+    (format nil
+	    "~d~2,'0d~2,'0dT~2,'0d~2,'0d~2,'0d"
+	    year month date hour minute second)))
+
+(defmethod get-transaction-log-filename ((system prevalence-system) &optional suffix)
+  "Return the name of the transaction-log filename, optionally using a suffix"
+  (format nil "transaction-log@[-~a]" suffix))
+
+(defmethod get-snapshot-filename ((system prevalence-system) &optional suffix)
+  "Return the name of the snapshot filename, optionally using a suffix"
+  (format nil "snapshot@[-~a]" suffix))
+
+;;; Some file manipulation utilities
 
 (defun truncate-file (file position)
   "Truncate the physical file at position by copying and replacing it"
@@ -314,11 +354,7 @@
 	 (write-sequence buffer out :end read-count)
 	 (when (< read-count 4096) (return)))))))
   
-(defmethod initiates-rollback ((condition condition))
-  t)
-
-(defmethod initiates-rollback ((no-rollback-error no-rollback-error))
-  nil)
+;;; extra documentation
 
 (setf (documentation 'get-guard 'function) "Access the guard function of a sytem")
 
