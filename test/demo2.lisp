@@ -298,25 +298,16 @@
     (delete-account account-number)
     (setf (get-option *bank-system* :rollback-on-error) nil)))
 
-;;; a multi-processing example (openmcl & lispworks only)
+;;; a multi-processing example
 
 (defparameter *bank-system-lock*
-  #+openmcl (ccl:make-lock "bank-system-lock")
-  #+lispworks (mp:make-lock :name "bank-system-lock")
-  #+allegro (mp:make-process-lock :name "bank-system-lock")
-  #-(or openmcl lispworks allegro) nil)
+  (make-process-lock "bank-system-lock"))
 
 (defun bank-system-guard (thunk)
-  #+openmcl (ccl:with-lock-grabbed (*bank-system-lock*) (funcall thunk))
-  #+lispworks (mp:with-lock (*bank-system-lock*) (funcall thunk)) 
-  #+allegro (mp:with-process-lock (*bank-system-lock*) (funcall thunk))
-  #-(or openmcl lispworks allegro) (funcall thunk))
+  (with-process-lock (*bank-system-lock*) (funcall thunk)))
 
 (defun spawn-process (name function)
-  #+openmcl (ccl:process-run-function name function)
-  #+lispworks (mp:process-run-function name nil function)
-  #+allegro (mp:process-run-function name function)
-  #-(or openmcl lispworks allegro) (funcall function))
+  (run-process name function))
 
 (defun bank-test-5-setup ()
   (when *bank-system* (close-open-streams *bank-system*))
