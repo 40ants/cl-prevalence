@@ -28,7 +28,6 @@
     ((:file "package")
      (:file "serialization" :depends-on ("package"))
      (:file "prevalence" :depends-on ("serialization"))
-     (:file "debug-prevalence" :depends-on ("prevalence"))
      (:file "managed-prevalence" :depends-on ("prevalence"))
      (:file "sysdeps" :depends-on ("package"))
      (:file "master-slave" :depends-on ("prevalence" "sysdeps"))

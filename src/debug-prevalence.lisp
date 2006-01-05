@@ -12,11 +12,13 @@
 
 (in-package :cl-prevalence)
 
+;; the code for #'s-xml::echo-xml is in "echo.lisp" in S-XML's test code
+
 (defun print-transaction-log (system)
   "Echo the XML making up the transaction log of system to t"
   (with-open-file (in (get-transaction-log system) :direction :input)
     (loop
-     (let ((transaction (s-xml:echo-xml in *standard-output*)))
+     (let ((transaction (s-xml::echo-xml in *standard-output*)))
        (when (null transaction) (return)))))
   t)
 
@@ -33,7 +35,7 @@
 (defun print-snapshot (system)
   "Echo the XML making up the snapshot of system to t"
   (with-open-file (in (get-snapshot system) :direction :input)
-    (s-xml:echo-xml in *standard-output*))
+    (s-xml::echo-xml in *standard-output*))
   t)
 
 (defun transaction-log-tail (system &optional (count 8))
