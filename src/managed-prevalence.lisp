@@ -58,7 +58,7 @@
     (when index
       (gethash id index))))
 
-(defgeneric find-object-with-slot (system class slot value &optional (test #'equalp))
+(defgeneric find-object-with-slot (system class slot value &optional test)
   (:documentation "Find and return the object in system of class with slot equal to value, null if not found"))
 
 (defmethod find-object-with-slot ((system prevalence-system) class slot value &optional (test #'equalp))
