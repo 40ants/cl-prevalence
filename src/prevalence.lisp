@@ -169,7 +169,7 @@
   "Totally destroy system from permanent storage by deleting any files used by the system, remove all root objects"
   (close-open-streams system :abort abort)
   (when (probe-file (get-directory system))
-    (dolist (pathname (directory (merge-pathnames (make-pathname :type (get-file-extension system))
+    (dolist (pathname (directory (merge-pathnames (make-pathname :name :wild :type (get-file-extension system))
                                                   (get-directory system))))
       (delete-file pathname)))
   (clrhash (get-root-objects system)))

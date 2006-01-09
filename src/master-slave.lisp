@@ -16,7 +16,7 @@
 (defun start-master-client (prevalence-system &key (host "localhost") (port 7651))
   "Start a connection to host:port to deliver transactions from prevalence-system"
   (stop-master-client prevalence-system)
-  (let ((out (open-socket-stream host port)))
+  (let ((out (s-sysdeps:open-socket-stream host port)))
     (setf (get-transaction-hook prevalence-system)
           #'(lambda (transaction)
               (funcall (get-serializer prevalence-system) 
@@ -38,7 +38,7 @@
 
 (defun start-slave-server (prevalence-system &key (port 7651))
   "Start a server on port accepting transactions to be executed on prevalence-system"
-  (start-standard-server 
+  (s-sysdeps:start-standard-server 
    :port port
    :name "prevalence-slave-server"
    :connection-handler #'(lambda (stream)
@@ -50,9 +50,5 @@
                                       (eq transaction :stop))
                                   (return)
                                 (execute prevalence-system transaction)))))))
-
-(defun stop-slave-server (name)
-  "Stop a slave server by name"
-  (stop-server name))
 
 ;;;; eof

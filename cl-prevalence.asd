@@ -29,9 +29,8 @@
      (:file "serialization" :depends-on ("package"))
      (:file "prevalence" :depends-on ("serialization"))
      (:file "managed-prevalence" :depends-on ("prevalence"))
-     (:file "sysdeps" :depends-on ("package"))
-     (:file "master-slave" :depends-on ("prevalence" "sysdeps"))
+     (:file "master-slave" :depends-on ("prevalence"))
      (:file "blob" :depends-on ("managed-prevalence")))))
-  :depends-on (:s-xml))
+  :depends-on (:s-xml :s-sysdeps))
 
 ;;;; eof
