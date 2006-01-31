@@ -39,7 +39,7 @@
 
 (defun tx-create-person (system firstname lastname)
   (let* ((persons (get-root-object system :persons))
-	 (id (tx-get-next-id system))
+	 (id (next-id system))
 	 (person (make-instance 'person :id id :firstname firstname :lastname lastname)))
     (setf (gethash id persons) person)))
 

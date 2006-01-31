@@ -168,6 +168,56 @@
  (equal (serialize-and-deserialize-sexp (list 1 2 3))
 	(list 1 2 3)))
 
+(assert
+ (equal (serialize-and-deserialize-xml (cons 1 2))
+        (cons 1 2)))
+
+(assert
+ (equal (serialize-and-deserialize-sexp (cons 1 2))
+        (cons 1 2)))
+
+(assert 
+ (equal (serialize-and-deserialize-xml '(1 2 3 4 5 6 7 8 9 . 0))
+        '(1 2 3 4 5 6 7 8 9 . 0)))
+
+(assert 
+ (equal (serialize-and-deserialize-sexp '(1 2 3 4 5 6 7 8 9 . 0))
+        '(1 2 3 4 5 6 7 8 9 . 0)))
+
+(assert
+ (equal (serialize-and-deserialize-xml (cons 'hi 2))
+	(cons 'hi 2)))
+
+(assert
+ (equal (serialize-and-deserialize-sexp (cons 'hi 2))
+	(cons 'hi 2)))
+
+(defun circular-list (&rest elements)
+   (let ((cycle (copy-list elements))) 
+     (nconc cycle cycle)))
+
+(assert
+ (equal (third (serialize-and-deserialize-sexp (circular-list 'a 'b)))
+        'a))
+(assert
+ (equal (third (serialize-and-deserialize-xml (circular-list 'a 'b)))
+        'a))
+
+(assert
+ (equal (serialize-and-deserialize-xml (cons 'hi 2))
+	(cons 'hi 2)))
+
+(assert
+ (equal (serialize-and-deserialize-sexp (cons 'hi 2))
+	(cons 'hi 2)))
+
+(assert
+ (equal (third (serialize-and-deserialize-sexp (circular-list 'a 'b)))
+        'a))
+(assert
+ (equal (third (serialize-and-deserialize-xml (circular-list 'a 'b)))
+        'a))
+
 ;; simple objects
 
 (defclass foobar ()
