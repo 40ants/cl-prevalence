@@ -1,6 +1,6 @@
 2006-01-31 Sven Van Caekenberghe <svc@mac.com>
 
-	* added patches contributed by Henrik Hjelte (henrik@evahjelte.com) to (de)serialize improper lists and conses
+	* added patches and tests contributed by Henrik Hjelte (henrik@evahjelte.com) to (de)serialize improper lists and conses
 
 2005-01-22 Sven Van Caekenberghe <svc@mac.com>
 
