@@ -379,8 +379,9 @@
                          (write-string " . " stream)
                          (serialize-sexp-internal value stream serialization-state)
                          (princ ")" stream))
-                     object))
-          (write-string " ) )" stream)))))
+                     object)
+            (write-string " )" stream))
+          (write-string " )" stream)))))
 
 (defmethod serialize-xml-internal ((object structure-object) stream serialization-state)
   (let ((id (known-object-id serialization-state object)))

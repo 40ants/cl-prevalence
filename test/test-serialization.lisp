@@ -277,4 +277,16 @@
   (maphash #'(lambda (k v) (assert (equal v (gethash k h2)))) *hashtable*) 
   (maphash #'(lambda (k v) (assert (equal v (gethash k *hashtable*)))) h2))
 
+(defparameter *empty-hashtable* (make-hash-table))
+
+(let (h2)
+  (setf h2 (serialize-and-deserialize-xml *empty-hashtable*))
+  (maphash #'(lambda (k v) (assert (equal v (gethash k h2)))) *empty-hashtable*) 
+  (maphash #'(lambda (k v) (assert (equal v (gethash k *hashtable*)))) h2))
+
+(let (h2)
+  (setf h2 (serialize-and-deserialize-sexp *empty-hashtable*))
+  (maphash #'(lambda (k v) (assert (equal v (gethash k h2)))) *empty-hashtable*) 
+  (maphash #'(lambda (k v) (assert (equal v (gethash k *hashtable*)))) h2))
+
 ;;; eof
