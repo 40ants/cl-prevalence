@@ -66,7 +66,6 @@
    #:id
    #:find-all-objects
    #:find-object-with-id
-   #:set-slot-values
    #:tx-create-id-counter
    #:tx-create-object
    #:tx-delete-object
