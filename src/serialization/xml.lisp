@@ -224,8 +224,16 @@
 		       (test (read-from-string (get-attribute-value :test attributes)))
 		       (size (parse-integer (get-attribute-value :size attributes))))
 		   (setf (gethash id *deserialized-objects*)
-			 (make-hash-table :test test :size size)))))
+			 (make-hash-table :test test :size size))))
+    (t (deserialize-xml-new-element-aux name attributes)))
   '())
+
+(defgeneric deserialize-xml-new-element-aux (name attributes)
+  (:documentation "Extend with your own types by overloading serialize-xml-internal
+                   and implementing deserialize aux functions")
+  (:method (name attributes)
+    (declare (ignore name attributes))
+    nil))
 
 (defun deserialize-xml-finish-element (name attributes parent-seed seed)
   (declare (special *deserialized-objects*))
@@ -263,8 +271,16 @@
                          (dolist (pair seed hash-table)
                            (setf (gethash (car pair) hash-table) (cadr pair)))))
           (:ref (let ((id (parse-integer (get-attribute-value :id attributes))))
-                  (gethash id *deserialized-objects*))))
+                  (gethash id *deserialized-objects*)))
+          (t (deserialize-xml-finish-element-aux name attributes parent-seed seed)))
         parent-seed))
+
+(defgeneric deserialize-xml-finish-element-aux (name attributes parent-seed seed)
+  (:documentation "Extend with your own types by overloading serialize-xml-internal
+                   and implementing deserialize aux functions")
+  (:method (name attributes parent-seed seed)
+    (declare (ignore name attributes parent-seed seed))
+    nil))
 
 (defun deserialize-xml-text (string seed)
   (declare (ignore seed))
