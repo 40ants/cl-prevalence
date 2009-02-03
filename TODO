@@ -1,0 +1,17 @@
+* introduce global state that doesn't get reset
+
+* move txn-state to serialize-xxx, local-state
+
+* possibly make local-state a function parameter instead
+  of a dynamic var
+
+* fix SEXP serializer
+
+* fix managed prevalence
+
+* add tests for correct object ref (de-)serialization
+
+* test suite -> fiveam
+
+* s-serialization should probably become a separate library
+
