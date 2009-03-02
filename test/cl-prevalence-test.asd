@@ -13,6 +13,6 @@
      (:file "test-prevalence")
      (:file "test-managed-prevalence")
      (:file "test-master-slave")
-;     (:file "test-serialization")
+     (:file "test-serialization")
      )
     :depends-on (:cl-prevalence :fiveam))

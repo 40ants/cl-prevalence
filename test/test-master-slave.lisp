@@ -12,7 +12,7 @@
 
 (in-package :cl-prevalence-test)
 
-(def-suite test-master-slave)
+(def-suite test-master-slave :in cl-prevalence-test)
 
 (in-suite test-master-slave)
 

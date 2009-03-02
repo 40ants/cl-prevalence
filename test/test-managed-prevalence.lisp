@@ -13,7 +13,7 @@
 ;;;; (http://opensource.franz.com/preamble.html), also known as the LLGPL.
 (in-package :cl-prevalence-test)
 
-(def-suite test-managed-prevalence)
+(def-suite test-managed-prevalence :in cl-prevalence-test)
 
 (in-suite test-managed-prevalence)
 

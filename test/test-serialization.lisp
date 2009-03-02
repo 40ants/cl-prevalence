@@ -12,7 +12,7 @@
 
 (in-package :cl-prevalence-test)
 
-(def-suite test-serialization)
+(def-suite test-serialization :in cl-prevalence-test)
 
 (in-suite test-serialization)
 
