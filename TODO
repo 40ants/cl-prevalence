@@ -15,3 +15,9 @@
 
 * s-serialization should probably become a separate library
 
+* progress display
+
+* continuable errors on deser
+
+* printer for systems should display directory, possibly other useful info
+
