@@ -10,7 +10,11 @@
 ;;;; as governed by the terms of the Lisp Lesser General Public License
 ;;;; (http://opensource.franz.com/preamble.html), also known as the LLGPL.
 
-(in-package :cl-prevalence)
+(in-package :cl-prevalence-test)
+
+(def-suite test-master-slave)
+
+(in-suite test-master-slave)
 
 ;; the master and client systems themselves
 
@@ -28,60 +32,60 @@
   ((username :accessor get-username :initarg :username :initform nil)
    (password :accessor get-password :initarg :password :initform nil)))
 
-;; setup both systems (clearing anything we find)
-
-(when *master-test-system* 
-  (totally-destroy *master-test-system*))
-
-(setf *master-test-system* (make-prevalence-system *master-test-system-directory*))
-(totally-destroy *master-test-system*)
-(execute-transaction (tx-create-id-counter *master-test-system*))
-
-(when *slave-test-system* 
-  (totally-destroy *slave-test-system*))
-
-(setf *slave-test-system* (make-prevalence-system *slave-test-system-directory*))
-(totally-destroy *slave-test-system*)
-(execute-transaction (tx-create-id-counter *slave-test-system*))
-
-;; setup the slave server and the master to slave connection
-
 (defvar *slave-server-name* nil)
-
-(setf *slave-server-name* (start-slave-server *slave-test-system*))
-
-(start-master-client *master-test-system*)
-
-;; now do the test
 
 (defvar *user-id* nil)
 
-(let ((user (execute-transaction (tx-create-object *master-test-system* 
+(test test-master-slave-start
+  "setup both systems (clearing anything we find)
+  setup the slave server and the master to slave connection"
+  (when *master-test-system* 
+    (totally-destroy *master-test-system*))
+
+  (setf *master-test-system* (make-prevalence-system *master-test-system-directory*))
+  (is-true *master-test-system*)
+  (totally-destroy *master-test-system*)
+  (execute-transaction (tx-create-id-counter *master-test-system*))
+
+  (when *slave-test-system* 
+    (totally-destroy *slave-test-system*))
+  (setf *slave-test-system* (make-prevalence-system *slave-test-system-directory*))
+  (is-true *slave-test-system*)
+  (totally-destroy *slave-test-system*)
+  (execute-transaction (tx-create-id-counter *slave-test-system*))
+  (setf *slave-server-name* (start-slave-server *slave-test-system*))
+  (is-true *slave-server-name*)
+
+  (start-master-client *master-test-system*)
+  (let ((user (execute-transaction (tx-create-object *master-test-system* 
                                                    'test-system-user
                                                    '((username "billg")
                                                      (password "windows"))))))
-  (setf *user-id* (get-id user)))
+    (setf *user-id* (get-id user)))
+  (is-true *user-id*)
+  *user-id*
+  )
+;; now do the test
 
-*user-id*
+(test test-get-master-user
+  (let ((user (find-object-with-id *master-test-system* 'test-system-user *user-id*)))
+    (is (and (equal (get-username user) "billg")
+	     (equal (get-password user) "windows")))))
 
-(let ((user (find-object-with-id *master-test-system* 'test-system-user *user-id*)))
-  (assert (and (equal (get-username user) "billg")
-               (equal (get-password user) "windows"))))
+(test test-get-slave-user :depends-on '(and test-get-master-user)
+      ;; Plato Wu,2009/02/27: because it need time to transfer data from master to slave?
+      (sleep 1)
+      (let ((user (find-object-with-id *slave-test-system* 'test-system-user *user-id*)))
+	(is (and (equal (get-username user) "billg")
+		 (equal (get-password user) "windows")))))
 
-(sleep 1)
+(test test-master-slave-end
+ " stop the master-slave connection and slave server
+  tidy up a bit"
+ (stop-master-client *master-test-system*)
+ (stop-slave-server *slave-server-name*)
 
-(let ((user (find-object-with-id *slave-test-system* 'test-system-user *user-id*)))
-  (assert (and (equal (get-username user) "billg")
-               (equal (get-password user) "windows"))))
-
-;; stop the master-slave connection and slave server
-
-(stop-master-client *master-test-system*)
-(stop-slave-server *slave-server-name*)
-
-;; tidy up a bit
-
-(close-open-streams *master-test-system*)
-(close-open-streams *slave-test-system*)
-
+ (close-open-streams *master-test-system*)
+ (close-open-streams *slave-test-system*)
+ )
 ;;;; eof

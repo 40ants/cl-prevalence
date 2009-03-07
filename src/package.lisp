@@ -77,6 +77,10 @@
    #:drop-index-on
    #:find-object-with-slot
 
+   ;; Plato Wu,2009/02/28: Add for testing system.
+   #:close-open-streams
+   #:next-id
+
    #:start-master-client
    #:stop-master-client
    #:start-slave-server

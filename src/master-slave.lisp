@@ -51,4 +51,9 @@
                                   (return)
                                 (execute prevalence-system transaction)))))))
 
+(defun stop-slave-server (server)
+  ;; Plato Wu,2009/02/26: stop-server need be exported in s-sysdeps.
+  (s-sysdeps::stop-server (caar server))
+  )
+
 ;;;; eof
