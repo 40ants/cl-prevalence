@@ -52,7 +52,7 @@
 	       (candidate (if numbers-list (1+ (first numbers-list)) 0))
 	       (largest 0))
 	  (loop
-	   (when (> candidate most-positive-fixnum)
+	   (when (> candidate (min most-positive-fixnum 16777215))
 	     (return))
 	   (when (prime-p candidate)
 	     (execute system (make-transaction 'tx-add-number candidate))

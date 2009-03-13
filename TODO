@@ -1,3 +1,5 @@
+* port to ccl, ecl
+
 * introduce global state that doesn't get reset
 
 * move txn-state to serialize-xxx, local-state
