@@ -1,3 +1,5 @@
+* TEST-OP
+
 * port to ccl, ecl
 
 * introduce global state that doesn't get reset
@@ -22,4 +24,6 @@
 * continuable errors on deser
 
 * printer for systems should display directory, possibly other useful info
+
+* unify SEXP/XML tests
 
