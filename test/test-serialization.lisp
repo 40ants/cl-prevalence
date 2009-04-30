@@ -128,6 +128,16 @@
    (eq (serialize-and-deserialize-sexp '|Unprintable|)
        '|Unprintable|)))
 
+(test test-uninterned-symbol-sexp
+  (let ((sym (gensym)))
+    (is (equal (princ-to-string (serialize-and-deserialize-sexp sym))
+               (princ-to-string sym)))))
+
+(test test-uninterned-symbol-xml
+  (let ((sym (gensym)))
+    (is (equal (princ-to-string (serialize-and-deserialize-xml sym))
+               (princ-to-string sym)))))
+
 (test test-primitive-21
   (is
    (equal (serialize-and-deserialize-xml "Hello")
