@@ -15,8 +15,8 @@
 (defsystem :cl-prevalence
   :name "CL-PREVALENCE"
   :author "Sven Van Caekenberghe <svc@mac.com>"
-  :version "4"
-  :maintainer "Sven Van Caekenberghe <svc@mac.com>"
+  :version "5"
+  :maintainer "Sven Van Caekenberghe <svc@mac.com>, Leslie P. Polzer <polzer@gnu.org>"
   :licence "Lesser Lisp General Public License"
   :description "Common Lisp Prevalence Package"
   :long-description "Common Lisp Prevalence is an implementation of Object Prevalence for Common Lisp"
