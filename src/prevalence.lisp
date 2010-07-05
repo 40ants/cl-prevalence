@@ -156,6 +156,7 @@
       (setf transaction-log-stream (open (get-transaction-log system)
 					 :direction :output
 					 :if-does-not-exist :create
+					 #+ccl :sharing #+ccl nil
 					 :if-exists :append)))))
 
 (defmethod close-open-streams ((system prevalence-system) &key abort)
