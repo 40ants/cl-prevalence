@@ -84,7 +84,8 @@
    #:start-master-client
    #:stop-master-client
    #:start-slave-server
-   #:stop-slave-server)
+   #:stop-slave-server
+   #:get-transaction-hook)
   (:documentation "An implementation of Object Prevalence for Common Lisp"))
 
 ;;;; eof
