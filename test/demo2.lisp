@@ -30,7 +30,10 @@
 
 (defclass account-entry ()
   ((amount :accessor get-amount :initarg :amount)
-   (timestamp :accessor get-timestamp :initarg :timestamp)))
+   (timestamp :accessor get-timestamp :initarg :timestamp)
+   (other-side :accessor get-other-side
+               :initarg :other-side
+               :initform nil)))
 
 (defun date-time->string (universal-time)
   (multiple-value-bind (second minute hour date month year)
@@ -40,8 +43,11 @@
 	    year month date hour minute second)))
 
 (defmethod print-object ((account-entry account-entry) stream)
-  (with-slots (timestamp amount) account-entry
-    (format stream "#<ACCOUNT-ENTRY ~a ~@d>" (date-time->string timestamp) amount)))
+  (with-slots (timestamp amount other-side) account-entry
+    (format stream "#<ACCOUNT-ENTRY ~a ~@d ~a>"
+            (date-time->string timestamp)
+            amount
+            other-side)))
 
 ;;; Prevalence System
 
@@ -124,9 +130,15 @@
 	   (error 'overdrawn-account :amount amount :account from-account))
 	  (t (decf (get-balance from-account) amount)
 	     (incf (get-balance to-account) amount)
-	     (push (make-instance 'account-entry :amount (- amount) :timestamp timestamp)
+	     (push (make-instance 'account-entry
+                                  :amount (- amount)
+                                  :timestamp timestamp
+                                  :other-side to-account)
 		   (get-transaction-history from-account))
-	     (push (make-instance 'account-entry :amount amount :timestamp timestamp)
+	     (push (make-instance 'account-entry
+                                  :amount amount
+                                  :timestamp timestamp
+                                  :other-side from-account)
 		   (get-transaction-history to-account))))
     amount))
 
@@ -191,9 +203,10 @@
     (assert (= 1000 (get-balance (find-account test-2))))
     (delete-account test-1)
     (delete-account test-2)
-    (print-transaction-log *bank-system*)
+    ;; (print-transaction-log *bank-system*)
     (snapshot *bank-system*)
-    (print-snapshot *bank-system*)))
+    ;; (print-snapshot *bank-system*)
+    ))
 
 (defun bank-test-2 ()
   (let ((test-1 (get-number (create-account "Test Account 1")))
