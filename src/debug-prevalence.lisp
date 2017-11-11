@@ -34,9 +34,11 @@
 
 (defun print-snapshot (system)
   "Echo the XML making up the snapshot of system to t"
-  (with-open-file (in (get-snapshot system) :direction :input)
-    (s-xml::echo-xml in *standard-output*))
-  t)
+  (s-xml:print-string-xml
+   (alexandria:read-file-into-string
+    (get-snapshot system))
+   *standard-output*)
+  (values))
 
 (defun transaction-log-tail (system &optional (count 8))
   "Return a list of the count last transaction objects of system"
