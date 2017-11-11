@@ -201,16 +201,18 @@
 (defmethod execute ((system prevalence-system) (transaction transaction))
   "Execute a transaction on a system and log it to the transaction log"
   (let ((result
-	 (handler-bind ((error #'(lambda (condition)
-				   (when (and (get-option system :rollback-on-error)
-					      (initiates-rollback condition))
-				     (format *standard-output* 
-                                             ";; Notice: system rollback/restore due to error (~a)~%" 
-                                             condition)
-				     (restore system)))))
-	   (execute-on transaction system))))
+          ;; To make it possible to return multiple values from transactions
+          (multiple-value-list
+           (handler-bind ((error #'(lambda (condition)
+                                     (when (and (get-option system :rollback-on-error)
+                                                (initiates-rollback condition))
+                                       (format *standard-output* 
+                                               ";; Notice: system rollback/restore due to error (~a)~%" 
+                                               condition)
+                                       (restore system)))))
+             (execute-on transaction system)))))
     (log-transaction system transaction)
-    result))
+    (values-list result)))
 
 (defmethod log-transaction ((system prevalence-system) (transaction transaction))
   "Log transaction for system"
