@@ -313,7 +313,7 @@
 (defmethod backup ((system guarded-prevalence-system) &key directory)
   "Do a backup on a system controlled by a guard"
   (funcall (get-guard system)
-           #'(lambda () (call-next-method system directory))))
+           #'(lambda () (call-next-method system :directory directory))))
 
 (defmethod restore ((system guarded-prevalence-system))
   "Restore a system controlled by a guard"
