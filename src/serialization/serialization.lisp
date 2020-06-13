@@ -91,7 +91,8 @@
   (mapcar #'clos:slot-definition-name (ext:structure-slots (type-of object)))
   #+ecl
   (mapcar #'clos:slot-definition-name (clos:class-slots (type-of object)))
-  #-(or openmcl cmu lispworks allegro sbcl clisp ecl)
+  #+abcl (mapcar (lambda(d) (svref d 1)) (mop:class-direct-slots (class-of object)))
+  #-(or openmcl cmu lispworks allegro sbcl clisp ecl abcl)
   (error "not yet implemented"))
 
 (defmethod serializable-slots ((object standard-object))
@@ -114,7 +115,8 @@
   (mapcar #'clos:slot-definition-name (clos:class-slots (class-of object)))
   #+ecl
   (mapcar #'clos:slot-definition-name (clos:class-slots (class-of object)))
-  #-(or openmcl cmu lispworks allegro sbcl clisp ecl)
+  #+abcl (mapcar 'mop::slot-definition-name (mop:class-direct-slots (class-of object)))
+  #-(or openmcl cmu lispworks allegro sbcl clisp ecl abcl)
   (error "not yet implemented"))
 
 (defmethod get-serializable-slots ((serialization-state serialization-state) object)
