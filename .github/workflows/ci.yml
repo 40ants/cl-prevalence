@@ -27,4 +27,6 @@ jobs:
       - name: Make Qlot environment
         run: touch qlfile && ~/.roswell/bin/qlot install
       - name: Run linter
-        run: ~/.roswell/bin/qlot exec sblint
+        run: |
+          ~/.roswell/bin/qlot run --eval '(ql:quickload :sblint)' --quit
+          ~/.roswell/bin/qlot exec sblint
