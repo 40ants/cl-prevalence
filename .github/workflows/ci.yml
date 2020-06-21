@@ -24,9 +24,8 @@ jobs:
         run: ros install fukamachi/qlot
       - name: Install SBLint
         run: ros install cxxxr/sblint
-      - name: Make Qlot environment
-        run: touch qlfile && ~/.roswell/bin/qlot install
       - name: Run linter
         run: |
-          ~/.roswell/bin/qlot run --eval '(ql:quickload :sblint)' --quit
-          ~/.roswell/bin/qlot exec sblint
+          echo 'github sblint cxxxr/sblint' > qlfile
+          ~/.roswell/bin/qlot install
+          ~/.roswell/bin/qlot exec ~/.roswell/bin/sblint
