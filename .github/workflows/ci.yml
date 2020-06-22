@@ -29,4 +29,9 @@ jobs:
           echo 'github sblint cxxxr/sblint' > qlfile
           ~/.roswell/bin/qlot install
           ~/.roswell/bin/qlot exec ~/.roswell/bin/sblint --verbose cl-prevalence.asd
-          ~/.roswell/bin/qlot exec ~/.roswell/bin/sblint --verbose test/cl-prevalence-test.asd
+          ~/.roswell/bin/qlot exec ~/.roswell/bin/sblint --verbose cl-prevalence-test.asd
+      - name: Run tests
+        run: |
+          ~/.roswell/bin/qlot exec ros run \
+                       --eval '(ql:quickload :cl-prevalence-test)' \
+                       --eval '(uiop:quit (fiveam:run-all-tests))'

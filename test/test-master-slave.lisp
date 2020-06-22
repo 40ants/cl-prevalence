@@ -36,9 +36,8 @@
 
 (defvar *user-id* nil)
 
-(test test-master-slave-start
-  "setup both systems (clearing anything we find)
-  setup the slave server and the master to slave connection"
+(defun start-master-slave ()
+  "Setup both master and slave systems (clearing anything we find)."
   (when *master-test-system* 
     (totally-destroy *master-test-system*))
 
@@ -58,34 +57,41 @@
 
   (start-master-client *master-test-system*)
   (let ((user (execute-transaction (tx-create-object *master-test-system* 
-                                                   'test-system-user
-                                                   '((username "billg")
-                                                     (password "windows"))))))
+                                                     'test-system-user
+                                                     '((username "billg")
+                                                       (password "windows"))))))
     (setf *user-id* (get-id user)))
   (is-true *user-id*)
-  *user-id*
-  )
+  *user-id*)
+
+(defun stop-master-slave ()
+  "Stop the master-slave connection and slave server tidy up a bit"
+  (stop-master-client *master-test-system*)
+  (stop-slave-server *slave-server-name*)
+
+  (close-open-streams *master-test-system*)
+  (close-open-streams *slave-test-system*))
+
+(defmacro master-slave-test (test-name &body body)
+  `(test ,test-name
+     (start-master-slave)
+     ;; Plato Wu,2009/02/27: because it need time to transfer data from master to slave?
+     (sleep 1)
+     (unwind-protect (progn ,@body)
+       (stop-master-slave))))
+
 ;; now do the test
 
-(test test-get-master-user
+(master-slave-test test-get-master-user
   (let ((user (find-object-with-id *master-test-system* 'test-system-user *user-id*)))
-    (is (and (equal (get-username user) "billg")
+    (is (and user
+             (equal (get-username user) "billg")
 	     (equal (get-password user) "windows")))))
 
-(test test-get-slave-user :depends-on '(and test-get-master-user)
-      ;; Plato Wu,2009/02/27: because it need time to transfer data from master to slave?
-      (sleep 1)
-      (let ((user (find-object-with-id *slave-test-system* 'test-system-user *user-id*)))
-	(is (and (equal (get-username user) "billg")
-		 (equal (get-password user) "windows")))))
+(master-slave-test test-get-slave-user
+  (let ((user (find-object-with-id *slave-test-system* 'test-system-user *user-id*)))
+    (is (and user
+             (equal (get-username user) "billg")
+             (equal (get-password user) "windows")))))
 
-(test test-master-slave-end
- " stop the master-slave connection and slave server
-  tidy up a bit"
- (stop-master-client *master-test-system*)
- (stop-slave-server *slave-server-name*)
-
- (close-open-streams *master-test-system*)
- (close-open-streams *slave-test-system*)
- )
 ;;;; eof

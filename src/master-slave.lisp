@@ -37,23 +37,24 @@
       (setf transaction-hook #'identity))))
 
 (defun start-slave-server (prevalence-system &key (port 7651))
-  "Start a server on port accepting transactions to be executed on prevalence-system"
+  "Start a server on port accepting transactions to be executed on prevalence-system
+   Returns a thread object"
   (s-sysdeps:start-standard-server 
    :port port
    :name "prevalence-slave-server"
    :connection-handler #'(lambda (stream)
                            (loop 
-                            (let ((transaction (funcall (get-deserializer prevalence-system)
-                                                        stream
-                                                        (get-serialization-state prevalence-system))))
-                              (if (or (null transaction)
-                                      (eq transaction :stop))
-                                  (return)
-                                (execute prevalence-system transaction)))))))
+                             (let ((transaction (funcall (get-deserializer prevalence-system)
+                                                         stream
+                                                         (get-serialization-state prevalence-system))))
+                               (if (or (null transaction)
+                                       (eq transaction :stop))
+                                   (return)
+                                   (execute prevalence-system transaction)))))))
 
-(defun stop-slave-server (server)
+(defun stop-slave-server (server-thread)
   ;; Plato Wu,2009/02/26: stop-server need be exported in s-sysdeps.
-  (s-sysdeps::stop-server (caar server))
-  )
+  (s-sysdeps::stop-server (bt:thread-name server-thread))
+  (values))
 
 ;;;; eof
