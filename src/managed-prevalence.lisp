@@ -67,7 +67,7 @@
 	 (index (get-root-object system index-name)))
     (if index
         (find-object-with-id system class (gethash value index))
-      (find value (find-all-objects system class) 
+      (find value (find-all-objects system class)
             :key #'(lambda (object) (slot-value object slot)) :test test))))
 
 (defun tx-create-objects-slot-index (system class slot &optional (test #'equalp))
@@ -78,7 +78,7 @@
         (setf (get-root-object system index-name) index)
         (dolist (object (find-all-objects system class))
           (add-object-to-slot-index system class slot object))))))
-  
+
 (defun tx-remove-objects-slot-index (system class slot)
   "Remove an index for this object on this slot"
   (let ((index-name (get-objects-slot-index-name class slot)))
@@ -112,7 +112,7 @@
 (defun slot-value-changed-p (object slot value)
   "Return true when slot in object is not eql to value (or when the slot was unbound)"
   (or (not (slot-boundp object slot))
-      (not (eql (slot-value object slot) value)))) 
+      (not (eql (slot-value object slot) value))))
 
 (defun tx-create-object (system class &optional slots-and-values)
   "Create a new object of class in system, assigning it a unique id, optionally setting some slots and values"
@@ -145,7 +145,7 @@
                 (remove-object-from-slot-index system class slot object)
                 (setf (slot-value object slot) value)
                 (add-object-to-slot-index system class slot object)))))
-                
+
 ;; We use a simple id counter to generate unique object identifiers
 
 (defun tx-create-id-counter (system)
@@ -165,7 +165,7 @@
   "Retrieve the value of the persistent preference stored under key in system"
   (let ((preferences (get-root-object system :preferences)))
     (when preferences
-      (gethash key preferences)))) 
+      (gethash key preferences))))
 
 (defun tx-set-preference (system key value)
   "Set the value of the persistent preference key in system"
@@ -188,5 +188,6 @@
                      (push key keys))
                  preferences)
         keys))))
+
 
 ;;;; eof
