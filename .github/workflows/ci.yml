@@ -1,0 +1,32 @@
+name: CI
+
+on: push
+
+jobs:
+  test:
+    name: ${{ matrix.lisp }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        lisp: [sbcl-bin, ccl-bin]
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install Roswell
+        env:
+          LISP: ${{ matrix.lisp }}
+        run: |
+          curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+      - name: Install Ultralisp
+        run: ros -e '(ql-dist:install-dist "http://dist.ultralisp.org/" :prompt nil)'
+      - name: Install Qlot
+        run: ros install fukamachi/qlot
+      - name: Install SBLint
+        run: ros install cxxxr/sblint
+      - name: Run linter
+        run: |
+          echo 'github sblint cxxxr/sblint' > qlfile
+          ~/.roswell/bin/qlot install
+          ~/.roswell/bin/qlot exec ~/.roswell/bin/sblint --verbose cl-prevalence.asd
+          ~/.roswell/bin/qlot exec ~/.roswell/bin/sblint --verbose test/cl-prevalence-test.asd
