@@ -181,21 +181,38 @@
       sexp
       (ecase (first sexp)
         (:sequence (destructuring-bind (id &key class size elements) (rest sexp)
-                     (let ((sequence (make-sequence class size)))
-                       (setf (gethash id deserialized-objects) sequence)
-                       (map-into sequence 
-                                 #'(lambda (x) (deserialize-sexp-internal x deserialized-objects)) 
-                                 elements))))
+                     (cond
+                       ((not class)
+                        (error "Unknown sequence class"))
+                       ((not size)
+                        (error "Unknown sequence size"))
+                       (t
+                        (let ((sequence (make-sequence class size)))
+                          (declare (ignorable sequence))
+                          (setf (gethash id deserialized-objects) sequence)
+                          (map-into sequence
+                                    #'(lambda (x) (deserialize-sexp-internal x deserialized-objects))
+                                  elements))))))
         (:hash-table (destructuring-bind (id &key test size rehash-size rehash-threshold entries) (rest sexp)
-                       (let ((hash-table (make-hash-table :size size 
-                                                          :test test 
-                                                          :rehash-size rehash-size 
-                                                          :rehash-threshold rehash-threshold)))
-                         (setf (gethash id deserialized-objects) hash-table)
-                         (dolist (entry entries)
-                           (setf (gethash (deserialize-sexp-internal (first entry) deserialized-objects) hash-table)
-                                 (deserialize-sexp-internal (rest entry) deserialized-objects)))
-                         hash-table)))
+                       (cond
+                         ((not test)
+                          (error "Test function is unknown"))
+                         ((not size)
+                          (error "Hash table size is unknown"))
+                         ((not rehash-size)
+                          (error "Hash table's rehash-size is unknown"))
+                         ((not rehash-threshold)
+                          (error "Hash table's rehash-threshold is unknown"))
+                         (t
+                          (let ((hash-table (make-hash-table :size size
+                                                             :test test
+                                                             :rehash-size rehash-size
+                                                             :rehash-threshold rehash-threshold)))
+                            (setf (gethash id deserialized-objects) hash-table)
+                            (dolist (entry entries)
+                              (setf (gethash (deserialize-sexp-internal (first entry) deserialized-objects) hash-table)
+                                    (deserialize-sexp-internal (rest entry) deserialized-objects)))
+                            hash-table)))))
         (:object (destructuring-bind (id &key class slots) (rest sexp)
                    (let ((object (make-instance class)))
                      (setf (gethash id deserialized-objects) object)
