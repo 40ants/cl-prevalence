@@ -41,6 +41,10 @@
   (declare (ignore serialization-state))
   (write-string "T" stream))
 
+(defmethod serialize-sexp-internal ((object pathname) stream serialization-state)
+  (declare (ignore serialization-state))
+  (prin1 object stream))
+
 (defmethod serialize-sexp-internal ((object string) stream serialization-state)
   (declare (ignore serialization-state))
   (prin1 object stream))
