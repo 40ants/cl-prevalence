@@ -188,6 +188,11 @@
    (equal (serialize-and-deserialize-sexp "Hello <foo> & </bar>!")
 	  "Hello <foo> & </bar>!")))
 
+(test test-primitive-31
+  (is
+   (equal (serialize-and-deserialize-sexp #P"path/name")
+	  #P"path/name")))
+
 ;; simple sequences
 
 (test test-simple-sequences-1
