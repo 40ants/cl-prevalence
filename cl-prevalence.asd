@@ -31,4 +31,5 @@
                  (:file "prevalence" :depends-on ("serialization"))
                  (:file "managed-prevalence" :depends-on ("prevalence"))
                  (:file "master-slave" :depends-on ("prevalence"))
-                 (:file "blob" :depends-on ("managed-prevalence"))))))
+                 (:file "blob" :depends-on ("managed-prevalence")))))
+  :in-order-to ((test-op (test-op "cl-prevalence-test"))))

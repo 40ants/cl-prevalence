@@ -6,6 +6,18 @@ CL-PREVALENCE
 
 This fork is available from Quicklisp and Ultralisp.org.
 
+Running tests
+-------------
+
+To run all tests, eval this in the REPL:
+
+```
+(asdf:test-system :cl-prevalence)
+```
+
+GitHub should run the testsuite for each pull-request automatically.
+
+
 History
 -------
 

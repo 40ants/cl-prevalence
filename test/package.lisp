@@ -7,6 +7,4 @@
   )
 (in-package :cl-prevalence-test)
 
-(def-suite cl-prevalence-test)
-
-
+(def-suite :cl-prevalence)
