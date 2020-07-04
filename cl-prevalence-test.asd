@@ -14,4 +14,6 @@
                  (:file "test-prevalence")
                  (:file "test-managed-prevalence")
                  (:file "test-master-slave")
-                 (:file "test-serialization")))))
+                 (:file "test-serialization"))))
+  :perform (test-op (o c)
+             (symbol-call :fiveam :run! :cl-prevalence)) )

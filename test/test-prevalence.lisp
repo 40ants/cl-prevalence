@@ -12,7 +12,7 @@
 
 (in-package :cl-prevalence-test)
 
-(def-suite test-prevalence :in cl-prevalence-test)
+(def-suite test-prevalence :in :cl-prevalence)
 
 (in-suite test-prevalence)
 
