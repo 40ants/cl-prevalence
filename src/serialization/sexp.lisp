@@ -255,7 +255,8 @@
                      #+(or sbcl ccl ecl clisp)
                      (make-instance struct-symbol)
                      #-(or sbcl ccl ecl clisp) ; ABCL and LispWorks don't support make-instance for structs.
-                     (error "Does not know how to deserialize non-default constructor"))))
+                     (error "Do not know how to deserialize struct ~S with non-default constructor"
+                            struct-symbol))))
     (dolist (slot slots)
       (when (slot-exists-p object (first slot))
         (setf (slot-value object (first slot))
