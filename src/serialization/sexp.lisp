@@ -220,10 +220,18 @@
         (:object (destructuring-bind (id &key class slots) (rest sexp)
                    (let ((object (deserialize-class class slots deserialized-objects)))
                      (setf (gethash id deserialized-objects) object)
+                     (dolist (slot slots)
+                       (when (slot-exists-p object (first slot))
+                         (setf (slot-value object (first slot))
+                               (deserialize-sexp-internal (rest slot) deserialized-objects))))
                      object)))
         (:struct (destructuring-bind (id &key class slots) (rest sexp)
                    (let ((object (deserialize-struct class slots deserialized-objects)))
                      (setf (gethash id deserialized-objects) object)
+                     (dolist (slot slots)
+                       (when (slot-exists-p object (first slot))
+                         (setf (slot-value object (first slot))
+                               (deserialize-sexp-internal (rest slot) deserialized-objects))))
                      object)))
         (:cons (destructuring-bind (id cons-car cons-cdr) (rest sexp)
                  (let ((conspair (cons nil nil)))
@@ -238,10 +246,6 @@
 
 (defmethod deserialize-class ((class-symbol t) slots deserialized-objects)
   (let ((object (make-instance class-symbol)))
-    (dolist (slot slots)
-      (when (slot-exists-p object (first slot))
-        (setf (slot-value object (first slot))
-              (deserialize-sexp-internal (rest slot) deserialized-objects))))
     object))
 
 (defgeneric deserialize-struct (struct-symbol slots serialization-state)
@@ -257,8 +261,4 @@
                      #-(or sbcl ccl ecl clisp) ; ABCL and LispWorks don't support make-instance for structs.
                      (error "Do not know how to deserialize struct ~S with non-default constructor"
                             struct-symbol))))
-    (dolist (slot slots)
-      (when (slot-exists-p object (first slot))
-        (setf (slot-value object (first slot))
-              (deserialize-sexp-internal (rest slot) deserialized-objects))))
     object))
