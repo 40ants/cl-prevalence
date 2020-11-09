@@ -325,6 +325,19 @@
 	     (equal (foobaz-foo foobaz) (foobaz-foo *foobaz*))
 	     (equal (foobaz-baz foobaz) (foobaz-baz *foobaz*))))))
 
+;; Same with non-default constructor.
+(defstruct (fooqux (:constructor %make-fooqux))
+  foo
+  qux)
+
+(defparameter *fooqux* (%make-fooqux :foo 101 :qux "Qux"))
+
+(test test-standard-structs-3
+  (let ((fooqux (serialize-and-deserialize-sexp *fooqux*)))
+    (is (and (fooqux-p fooqux)
+	     (equal (fooqux-foo fooqux) (fooqux-foo *fooqux*))
+	     (equal (fooqux-qux fooqux) (fooqux-qux *fooqux*))))))
+
 ;;; hash-tables
 
 (defparameter *hashtable* 

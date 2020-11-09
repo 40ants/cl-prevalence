@@ -218,7 +218,7 @@
                                     (deserialize-sexp-internal (rest entry) deserialized-objects)))
                             hash-table)))))
         (:object (destructuring-bind (id &key class slots) (rest sexp)
-                   (let ((object (make-instance class)))
+                   (let ((object (deserialize-class class slots deserialized-objects)))
                      (setf (gethash id deserialized-objects) object)
                      (dolist (slot slots)
                        (when (slot-exists-p object (first slot))
@@ -226,8 +226,7 @@
                                (deserialize-sexp-internal (rest slot) deserialized-objects))))
                      object)))
         (:struct (destructuring-bind (id &key class slots) (rest sexp)
-                   (let ((object (funcall (intern (concatenate 'string "MAKE-" (symbol-name class))
-                                                  (symbol-package class)))))
+                   (let ((object (deserialize-struct class slots deserialized-objects)))
                      (setf (gethash id deserialized-objects) object)
                      (dolist (slot slots)
                        (when (slot-exists-p object (first slot))
@@ -241,3 +240,25 @@
                    (rplaca conspair (deserialize-sexp-internal cons-car deserialized-objects))
                    (rplacd conspair (deserialize-sexp-internal cons-cdr deserialized-objects)))))
         (:ref (gethash (rest sexp) deserialized-objects)))))
+
+(defgeneric deserialize-class (class-symbol slots serialization-state)
+  (:documentation "Read and return an s-expression serialized version of a Lisp class from stream."))
+
+(defmethod deserialize-class ((class-symbol t) slots deserialized-objects)
+  (let ((object (make-instance class-symbol)))
+    object))
+
+(defgeneric deserialize-struct (struct-symbol slots serialization-state)
+  (:documentation "Read and return an s-expression serialized version of a Lisp struct from stream."))
+
+(defmethod deserialize-struct ((struct-symbol t) slots deserialized-objects)
+  (let* ((constructor (intern (concatenate 'string "MAKE-" (symbol-name struct-symbol))
+                              (symbol-package struct-symbol)))
+         (object (if (fboundp constructor)
+                     (funcall constructor)
+                     #+(or sbcl ccl ecl clisp)
+                     (make-instance struct-symbol)
+                     #-(or sbcl ccl ecl clisp) ; ABCL and LispWorks don't support make-instance for structs.
+                     (error "Do not know how to deserialize struct ~S with non-default constructor"
+                            struct-symbol))))
+    object))
