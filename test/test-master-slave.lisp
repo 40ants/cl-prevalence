@@ -38,31 +38,34 @@
 
 (defun start-master-slave ()
   "Setup both master and slave systems (clearing anything we find)."
-  (when *master-test-system* 
-    (totally-destroy *master-test-system*))
+  (let ((port (find-port:find-port)))
+    (when *master-test-system* 
+      (totally-destroy *master-test-system*))
 
-  (setf *master-test-system* (make-prevalence-system *master-test-system-directory*))
-  (is-true *master-test-system*)
-  (totally-destroy *master-test-system*)
-  (execute-transaction (tx-create-id-counter *master-test-system*))
+    (setf *master-test-system* (make-prevalence-system *master-test-system-directory*))
+    (is-true *master-test-system*)
+    (totally-destroy *master-test-system*)
+    (execute-transaction (tx-create-id-counter *master-test-system*))
 
-  (when *slave-test-system* 
-    (totally-destroy *slave-test-system*))
-  (setf *slave-test-system* (make-prevalence-system *slave-test-system-directory*))
-  (is-true *slave-test-system*)
-  (totally-destroy *slave-test-system*)
-  (execute-transaction (tx-create-id-counter *slave-test-system*))
-  (setf *slave-server-name* (start-slave-server *slave-test-system*))
-  (is-true *slave-server-name*)
+    (when *slave-test-system* 
+      (totally-destroy *slave-test-system*))
+    (setf *slave-test-system* (make-prevalence-system *slave-test-system-directory*))
+    (is-true *slave-test-system*)
+    (totally-destroy *slave-test-system*)
+    (execute-transaction (tx-create-id-counter *slave-test-system*))
+    (setf *slave-server-name* (start-slave-server *slave-test-system*
+                                                  :port port))
+    (is-true *slave-server-name*)
 
-  (start-master-client *master-test-system*)
-  (let ((user (execute-transaction (tx-create-object *master-test-system* 
-                                                     'test-system-user
-                                                     '((username "billg")
-                                                       (password "windows"))))))
-    (setf *user-id* (get-id user)))
-  (is-true *user-id*)
-  *user-id*)
+    (start-master-client *master-test-system*
+                         :port port)
+    (let ((user (execute-transaction (tx-create-object *master-test-system* 
+                                                       'test-system-user
+                                                       '((username "billg")
+                                                         (password "windows"))))))
+      (setf *user-id* (get-id user)))
+    (is-true *user-id*)
+    *user-id*))
 
 (defun stop-master-slave ()
   "Stop the master-slave connection and slave server tidy up a bit"

@@ -7,7 +7,8 @@
   :description "Common Lisp Prevalence Test Package"
   :long-description "5am test suite for cl-prevalence"
   :depends-on ("cl-prevalence"
-               "fiveam")
+               "fiveam"
+               "find-port")
   :components 
   ((:module "test"
     :components ((:file "package")
