@@ -2,6 +2,11 @@
  ChangeLog
 ===========
 
+v6 (2021-05-11)
+===============
+
+* Fixed to work with the recent version of ``s-sysdeps`` system.
+
 2019-10-28
 ==========
 

@@ -13,7 +13,7 @@
 (defsystem "cl-prevalence"
   :name "CL-PREVALENCE"
   :author "Sven Van Caekenberghe <svc@mac.com>"
-  :version "5"
+  :version "6"
   :maintainer "Alexander Artemenko <svetlyak.40wt@gmail.com>"
   :licence "Lesser Lisp General Public License"
   :description "Common Lisp Prevalence Package"

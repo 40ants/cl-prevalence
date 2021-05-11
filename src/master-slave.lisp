@@ -53,8 +53,7 @@
                                    (execute prevalence-system transaction)))))))
 
 (defun stop-slave-server (server-thread)
-  ;; Plato Wu,2009/02/26: stop-server need be exported in s-sysdeps.
-  (s-sysdeps::stop-server (bt:thread-name server-thread))
+  (s-sysdeps:stop-process (bt:thread-name server-thread))
   (values))
 
 ;;;; eof
