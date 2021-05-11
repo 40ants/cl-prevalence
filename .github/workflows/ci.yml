@@ -1,36 +1,95 @@
-name: CI
-
-on: push
-
-jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        lisp: [sbcl-bin, ccl-bin]
-        os: [ubuntu-latest]
-
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install Roswell
-        env:
-          LISP: ${{ matrix.lisp }}
-        run: |
-          curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
-      - name: Install Ultralisp
-        run: ros -e '(ql-dist:install-dist "http://dist.ultralisp.org/" :prompt nil)'
-      - name: Install Qlot
-        run: ros install fukamachi/qlot
-      - name: Install SBLint
-        run: ros install cxxxr/sblint
-      - name: Run linter
-        run: |
-          echo 'github sblint cxxxr/sblint' > qlfile
-          ~/.roswell/bin/qlot install
-          ~/.roswell/bin/qlot exec ~/.roswell/bin/sblint --verbose cl-prevalence.asd
-          ~/.roswell/bin/qlot exec ~/.roswell/bin/sblint --verbose cl-prevalence-test.asd
-      - name: Run tests
-        run: |
-          ~/.roswell/bin/qlot exec ros run \
-                       --eval '(ql:quickload :cl-prevalence-test)' \
-                       --eval '(uiop:quit (fiveam:run! :cl-prevalence))'
+{
+  "name": "CI",
+  "on": {
+    "push": {
+      "branches": [
+        "master"
+      ]
+    },
+    "pull_request": null,
+    "schedule": [
+      {
+        "cron": "0 10 * * 1"
+      }
+    ]
+  },
+  "jobs": {
+    "run-tests": {
+      "strategy": {
+        "fail-fast": false,
+        "matrix": {
+          "os": [
+            "ubuntu-latest",
+            "macos-latest"
+          ],
+          "quicklisp": [
+            "quicklisp",
+            "ultralisp"
+          ],
+          "lisp": [
+            "sbcl-bin",
+            "ccl-bin"
+          ]
+        }
+      },
+      "runs-on": "${{ matrix.os }}",
+      "env": {
+        "OS": "${{ matrix.os }}",
+        "QUICKLISP_DIST": "${{ matrix.quicklisp }}",
+        "LISP": "${{ matrix.lisp }}"
+      },
+      "steps": [
+        {
+          "name": "Checkout Code",
+          "uses": "actions/checkout@v1"
+        },
+        {
+          "name": "Setup Common Lisp Environment",
+          "uses": "40ants/setup-lisp@v1",
+          "with": {
+            "asdf-system": "cl-prevalence"
+          }
+        },
+        {
+          "name": "Run Tests",
+          "uses": "40ants/run-tests@v2",
+          "with": {
+            "asdf-system": "cl-prevalence",
+            "coveralls-token": "\n${{ matrix.lisp == 'sbcl-bin' &&\n    matrix.os == 'ubuntu-latest' &&\n    matrix.quicklisp == 'ultralisp' &&\n    secrets.github_token }}"
+          }
+        }
+      ]
+    },
+    "linter": {
+      "runs-on": "ubuntu-latest",
+      "env": {
+        "OS": "ubuntu-latest",
+        "QUICKLISP_DIST": "quicklisp",
+        "LISP": "sbcl-bin"
+      },
+      "steps": [
+        {
+          "name": "Checkout Code",
+          "uses": "actions/checkout@v1"
+        },
+        {
+          "name": "Setup Common Lisp Environment",
+          "uses": "40ants/setup-lisp@v1",
+          "with": {
+            "asdf-system": "cl-prevalence"
+          }
+        },
+        {
+          "name": "Install SBLint",
+          "run": "\necho 'dist ultralisp http://dist.ultralisp.org' > qlfile\nqlot update\nqlot exec ros install 40ants-linter\n",
+          "shell": "bash"
+        },
+        {
+          "name": "Run Linter",
+          "run": "qlot exec 40ants-linter --system \"cl-prevalence\"",
+          "shell": "bash"
+        }
+      ]
+    }
+  }
+}
