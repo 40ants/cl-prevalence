@@ -16,7 +16,8 @@
                  (:file "test-master-slave")
                  (:file "test-serialization"))))
   :perform (test-op (o c)
-                    (let ((num-failures (symbol-call :fiveam :run! :cl-prevalence)))
-                      (unless (zerop num-failures)
+                    (multiple-value-bind (success num-failures)
+                        (symbol-call :fiveam :run! :cl-prevalence)
+                      (unless success
                         (error "There were ~S failures"
                                num-failures)))))
