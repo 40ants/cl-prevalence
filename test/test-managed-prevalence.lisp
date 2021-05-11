@@ -91,7 +91,7 @@
     (is (eq NIL (find-managed-person 'firstname "J-Lu")))
     (setf *jlp* (get-id managed-person))))
 
-(test test-get-managed-person
+(test (test-get-managed-person :depends-on test-create-managed-person)
   (let ((managed-person (find-object-with-id *test-system* 'managed-person *jlp*)))
     (is (eq (class-of managed-person) (find-class 'managed-person)))
     (is (equal (get-firstname managed-person) "Jean-Luc"))
@@ -103,7 +103,7 @@
     (is (equal (get-firstname (find-managed-person 'lastname "Picard")) "Jean-Luc"))
     (is (eq NIL (find-managed-person 'firstname "J-Lu")))))
 
-(test test-find-managed-person-restart
+(test (test-find-managed-person-restart :depends-on test-create-managed-person)
   "Throw away the previous prevalence instance and start over,
   counting on a restore operation using the transaction log"
   (close-open-streams *test-system*)
@@ -119,7 +119,7 @@
     (is (equal (get-firstname (find-managed-person 'lastname "Picard")) "Jean-Luc"))
     (is (eq NIL (find-managed-person 'firstname "J-Lu")))))
 
-(test test-find-managed-person-snapshot
+(test (test-find-managed-person-snapshot :depends-on test-create-managed-person)
   "Create a snapshot of our test system"
   (snapshot *test-system*)
   (let ((managed-person (find-object-with-id *test-system* 'managed-person *jlp*)))
@@ -133,7 +133,7 @@
     (is (equal (get-firstname (find-managed-person 'lastname "Picard")) "Jean-Luc"))
     (is (eq NIL (find-managed-person 'firstname "J-Lu")))))
 
-(test test-find-managed-person-restart-snapshot
+(test (test-find-managed-person-restart-snapshot :depends-on test-create-managed-person)
   "Throw away the previous prevalence instance and start over,
   counting on a restore operation using the snapshot"
   (close-open-streams *test-system*)
@@ -161,7 +161,7 @@
     (is (equal (get-lastname (find-managed-person 'firstname "Kathryn")) "Janeway"))
     (setf *kj* (get-id managed-person))))
 
-(test test-find-managed-person-1
+(test (test-find-managed-person-1 :depends-on test-create-managed-person-1)
   (let ((managed-person (find-object-with-id *test-system* 'managed-person *kj*)))
     (is (eq (class-of managed-person) (find-class 'managed-person)))
     (is (equal (get-firstname managed-person) "Kathryn"))
@@ -169,7 +169,7 @@
     (is (equal (get-firstname (find-managed-person 'lastname "Janeway")) "Kathryn"))
     (is (equal (get-lastname (find-managed-person 'firstname "Kathryn")) "Janeway"))))
 
-(test test-find-managed-person-restart-1
+(test (test-find-managed-person-restart-1 :depends-on test-create-managed-person)
   "Throw away the previous prevalence instance and start over,
    counting on a restore operation using both the snapshot and the transaction log"
   (close-open-streams *test-system*)
@@ -185,7 +185,7 @@
     (is (equal (get-firstname (find-managed-person 'lastname "Picard")) "Jean-Luc"))
     (is (eq NIL (find-managed-person 'firstname "J-Lu")))))
 
-(test test-find-managed-person-restart-2
+(test (test-find-managed-person-restart-2 :depends-on test-create-managed-person-1)
   (let ((managed-person (find-object-with-id *test-system* 'managed-person *kj*)))
     (is (eq (class-of managed-person) (find-class 'managed-person)))
     (is (equal (get-firstname managed-person) "Kathryn"))

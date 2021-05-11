@@ -73,13 +73,13 @@
     (is (equal (get-lastname person) "Picard"))
     (setf *jlp* (get-id person))))
 
-(test test-get-person :depends-on '(and test-create-person)
+(test (test-get-person :depends-on test-create-person)
     (let ((person (gethash *jlp* (get-root-object *test-system* :persons))))
       (is (eq (class-of person) (find-class 'person)))
       (is (equal (get-firstname person) "Jean-Luc"))
       (is (equal (get-lastname person) "Picard"))))
 
-(test test-get-person-restart
+(test (test-get-person-restart :depends-on test-create-person)
   "Throw away the previous prevalence instance and start over,
    counting on a restore operation using the transaction log"
   (close-open-streams *test-system*)
@@ -89,7 +89,7 @@
    (is (equal (get-firstname person) "Jean-Luc"))
    (is (equal (get-lastname person) "Picard"))))
 
-(test test-get-person-snapshot
+(test (test-get-person-snapshot :depends-on test-create-person)
   "Create a snapshot of our test system"
   (snapshot *test-system*)
   (let ((person (gethash *jlp* (get-root-object *test-system* :persons))))
@@ -97,7 +97,7 @@
    (is (equal (get-firstname person) "Jean-Luc"))
    (is (equal (get-lastname person) "Picard"))))
 
-(test test-get-person-restart-snapshot
+(test (test-get-person-restart-snapshot :depends-on test-create-person)
   "Throw away the previous prevalence instance and start over,
    counting on a restore operation using the snapshot"
   (close-open-streams *test-system*)
@@ -112,33 +112,33 @@
 (defvar *kj*)
 
 (test test-create-person-1
-    (let ((person (execute *test-system* (make-transaction 'tx-create-person "Kathryn" "Janeway"))))
-   (is (eq (class-of person) (find-class 'person)))
-   (is (equal (get-firstname person) "Kathryn"))
-   (is (equal (get-lastname person) "Janeway"))
-   (setf *kj* (get-id person))))
+  (let ((person (execute *test-system* (make-transaction 'tx-create-person "Kathryn" "Janeway"))))
+    (is (eq (class-of person) (find-class 'person)))
+    (is (equal (get-firstname person) "Kathryn"))
+    (is (equal (get-lastname person) "Janeway"))
+    (setf *kj* (get-id person))))
 
-(test test-get-person-1
+(test (test-get-person-1 :depends-on test-create-person-1)
   (let ((person (gethash *kj* (get-root-object *test-system* :persons))))
-   (is (eq (class-of person) (find-class 'person)))
-   (is (equal (get-firstname person) "Kathryn"))
-   (is (equal (get-lastname person) "Janeway"))))
+    (is (eq (class-of person) (find-class 'person)))
+    (is (equal (get-firstname person) "Kathryn"))
+    (is (equal (get-lastname person) "Janeway"))))
 
-(test test-get-person-restart-1
+(test (test-get-person-restart-1 :depends-on test-create-person)
   "Throw away the previous prevalence instance and start over,
   counting on a restore operation using both the snapshot and the transaction log"
   (close-open-streams *test-system*)
   (setf *test-system* (make-prevalence-system *test-system-directory*))
   (let ((person (gethash *jlp* (get-root-object *test-system* :persons))))
-   (is (eq (class-of person) (find-class 'person)))
-   (is (equal (get-firstname person) "Jean-Luc"))
-   (is (equal (get-lastname person) "Picard"))))
+    (is (eq (class-of person) (find-class 'person)))
+    (is (equal (get-firstname person) "Jean-Luc"))
+    (is (equal (get-lastname person) "Picard"))))
 
-(test test-get-person-restart-2
+(test (test-get-person-restart-2 :depends-on test-create-person-1)
   (let ((person (gethash *kj* (get-root-object *test-system* :persons))))
-   (is (eq (class-of person) (find-class 'person)))
-   (is (equal (get-firstname person) "Kathryn"))
-   (is (equal (get-lastname person) "Janeway"))))
+    (is (eq (class-of person) (find-class 'person)))
+    (is (equal (get-firstname person) "Kathryn"))
+    (is (equal (get-lastname person) "Janeway"))))
 
 (test test-person-count
   (mapcar #'(lambda (pair)
