@@ -45,6 +45,8 @@
   (let* ((persons (get-root-object system :persons))
 	 (id (next-id system))
 	 (person (make-instance 'person :id id :firstname firstname :lastname lastname)))
+    (unless persons
+      (error "Seems test HASH-TABLE-TEST was not executed."))
     (setf (gethash id persons) person)))
 
 (defun tx-delete-person (system id)
@@ -56,7 +58,7 @@
   (execute *test-system* (make-transaction 'tx-create-id-counter))
   (is (zerop (get-root-object *test-system* :id-counter))))
 
-(test hash-table-test
+(test (hash-table-test :depends-on create-counter)
   "Create the hash-table holding all known persistent persons and mapping person id' to person objects"
   (execute *test-system* (make-transaction 'tx-create-persons-root))  
   (is (hash-table-p (get-root-object *test-system* :persons))))
@@ -64,7 +66,7 @@
 ;; A place to store our test person's id outside of the system
 (defvar *jlp*)
 
-(test test-create-person
+(test (test-create-person :depends-on hash-table-test)
   "Create a new test person"
   (let
       ((person (execute *test-system* (make-transaction 'tx-create-person "Jean-Luc" "Picard"))))
@@ -141,14 +143,18 @@
     (is (equal (get-lastname person) "Janeway"))))
 
 (test test-person-count
-  (mapcar #'(lambda (pair)
-	    (execute *test-system* (make-transaction 'tx-create-person (car pair) (cadr pair))))
-	'(("Benjamin" "Sisko") ("James T." "Kirk") ("Jonathan" "Archer")))
-  (is (= (hash-table-count (get-root-object *test-system* :persons)) 5))
-  (mapcar #'(lambda (id)
-	      (execute *test-system* (make-transaction 'tx-delete-person id)))
-	  '(2 3 4))
-  (is (= (hash-table-count (get-root-object *test-system* :persons)) 2)))
+  (let* ((persons
+           (mapcar #'(lambda (pair)
+                       (execute *test-system* (make-transaction 'tx-create-person (car pair) (cadr pair))))
+                   '(("Benjamin" "Sisko") ("James T." "Kirk") ("Jonathan" "Archer"))))
+         (ids (mapcar #'get-id
+                      persons)))
+    (is (= (hash-table-count (get-root-object *test-system* :persons))
+           3))
+    (mapcar #'(lambda (id)
+	        (execute *test-system* (make-transaction 'tx-delete-person id)))
+            ids)
+    (is (zerop (hash-table-count (get-root-object *test-system* :persons))))))
 
 (defvar *guard*)
 

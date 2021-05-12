@@ -39,6 +39,9 @@
 (defun start-slave-server (prevalence-system &key (port 7651))
   "Start a server on port accepting transactions to be executed on prevalence-system
    Returns a thread object"
+  #+ccl
+  (error "On CCL master/slave does not work because of this error: BASIC-TCP-STREAM ISO-8859-1 (SOCKET/17) #x30200181FD9D> is not of the expected type (AND CCL::CHARACTER-STREAM CCL:OUTPUT-STREAM")
+  
   (s-sysdeps:start-standard-server 
    :port port
    :name "prevalence-slave-server"

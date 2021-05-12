@@ -13,12 +13,13 @@
   :on-pull-request t
   :by-cron "0 10 * * 1"
   :jobs ((40ants-ci/jobs/run-tests:run-tests
-          ;; :coverage t
-          ;; :os ("ubuntu-latest"
-          ;;      "macos-latest")
-          ;; :quicklisp ("quicklisp"
-          ;;             "ultralisp")
+          :coverage t
+          :os ("ubuntu-latest"
+               "macos-latest")
+          :quicklisp ("quicklisp"
+                      "ultralisp")
           :lisp (
-                 ;; "sbcl-bin"
-                 "ccl-bin"))
+                 "sbcl-bin"
+                 ;; "ccl-bin"
+                 ))
          (40ants-ci/jobs/linter:linter)))

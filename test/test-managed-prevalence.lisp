@@ -93,6 +93,7 @@
 
 (test (test-get-managed-person :depends-on test-create-managed-person)
   (let ((managed-person (find-object-with-id *test-system* 'managed-person *jlp*)))
+    (assert (not (null managed-person)))
     (is (eq (class-of managed-person) (find-class 'managed-person)))
     (is (equal (get-firstname managed-person) "Jean-Luc"))
     (is (equal (get-lastname managed-person) "Picard"))
@@ -194,14 +195,21 @@
     (is (equal (get-lastname (find-managed-person 'firstname "Kathryn")) "Janeway"))))
 
 (test test-managed-person-count
-  (mapcar #'(lambda (pair)
-	      (make-managed-person 'firstname (first pair) 'lastname (second pair)))
-	  '(("Benjamin" "Sisko") ("James T." "Kirk") ("Jonathan" "Archer")))
-  (is (= (length (find-all-objects *test-system* 'managed-person)) 5))
-  (mapcar #'(lambda (pair)
-	      (delete-managed-person (find-managed-person 'firstname (first pair))))
-	  '(("Benjamin" "Sisko") ("James T." "Kirk") ("Jonathan" "Archer")))
-  (is (= (length (find-all-objects *test-system* 'managed-person)) 2)))
+  (flet ((get-count ()
+           (length (find-all-objects *test-system* 'managed-person))))
+    (let* ((count-before (get-count))
+           (names '(("Benjamin" "Sisko") ("James T." "Kirk") ("Jonathan" "Archer"))))
+      (mapcar #'(lambda (pair)
+                  (make-managed-person 'firstname (first pair) 'lastname (second pair)))
+              names)
+      (is (= (- (get-count)
+                count-before)
+             3))
+      (mapcar #'(lambda (pair)
+                  (delete-managed-person (find-managed-person 'firstname (first pair))))
+              names)
+      (is (= (get-count)
+             count-before)))))
 
 (defvar *managed-guard*)
 
