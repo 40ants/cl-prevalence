@@ -142,19 +142,23 @@
     (is (equal (get-firstname person) "Kathryn"))
     (is (equal (get-lastname person) "Janeway"))))
 
-(test test-person-count
-  (let* ((persons
+(test (test-person-count :depends-on hash-table-test)
+  (let* ((num-persons-before
+           (hash-table-count (get-root-object *test-system* :persons)))
+         (persons
            (mapcar #'(lambda (pair)
                        (execute *test-system* (make-transaction 'tx-create-person (car pair) (cadr pair))))
                    '(("Benjamin" "Sisko") ("James T." "Kirk") ("Jonathan" "Archer"))))
          (ids (mapcar #'get-id
                       persons)))
     (is (= (hash-table-count (get-root-object *test-system* :persons))
-           3))
+           (+ num-persons-before
+              3)))
     (mapcar #'(lambda (id)
 	        (execute *test-system* (make-transaction 'tx-delete-person id)))
             ids)
-    (is (zerop (hash-table-count (get-root-object *test-system* :persons))))))
+    (is (= (hash-table-count (get-root-object *test-system* :persons))
+           num-persons-before))))
 
 (defvar *guard*)
 
