@@ -241,15 +241,15 @@
                    (rplacd conspair (deserialize-sexp-internal cons-cdr deserialized-objects)))))
         (:ref (gethash (rest sexp) deserialized-objects)))))
 
-(defgeneric deserialize-class (class-symbol slots serialization-state)
-  (:documentation "Read and return an s-expression serialized version of a Lisp class from stream."))
+(defgeneric deserialize-class (class-symbol slots deserialized-objects)
+  (:documentation "Read and return an the instance corresponding to CLASS-SYMBOL with SLOTS."))
 
 (defmethod deserialize-class ((class-symbol t) slots deserialized-objects)
   (let ((object (make-instance class-symbol)))
     object))
 
-(defgeneric deserialize-struct (struct-symbol slots serialization-state)
-  (:documentation "Read and return an s-expression serialized version of a Lisp struct from stream."))
+(defgeneric deserialize-struct (struct-symbol slots deserialized-objects)
+  (:documentation "Read and return an the instance corresponding to STRUCT-SYMBOL with SLOTS."))
 
 (defmethod deserialize-struct ((struct-symbol t) slots deserialized-objects)
   (let* ((constructor (intern (concatenate 'string "MAKE-" (symbol-name struct-symbol))
