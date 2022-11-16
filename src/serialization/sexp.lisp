@@ -17,6 +17,14 @@
 (defgeneric serialize-sexp-internal (object stream serialization-state)
   (:documentation "Write a serialized version of object to stream using s-expressions"))
 
+(defgeneric serialize-sexp-slot (object slot-name stream serialization-state)
+  (:documentation "Write a serialized version of OBJECT's SLOT-NAME to STREAM using
+s-expressions."))
+
+(defmethod serialize-sexp-slot ((object standard-object) slot-name stream serialization-state)
+  (serialize-sexp-internal (slot-value object slot-name)
+                           stream serialization-state))
+
 (defun print-symbol (symbol stream)
   (let ((package (symbol-package symbol))
 	(name (prin1-to-string symbol)))
@@ -173,7 +181,7 @@
                       (write-string " (" stream)
                       (print-symbol slot stream)
                       (write-string " . " stream)
-                      (serialize-sexp-internal (slot-value object slot) stream serialization-state)
+                      (serialize-sexp-slot object slot stream serialization-state)
                       (write-string ")" stream))))
 	(write-string " ) )" stream)))))
 
@@ -223,7 +231,7 @@
                      (dolist (slot slots)
                        (when (slot-exists-p object (first slot))
                          (setf (slot-value object (first slot))
-                               (deserialize-sexp-internal (rest slot) deserialized-objects))))
+                               (deserialize-sexp-slot object (first slot) (rest slot) deserialized-objects))))
                      object)))
         (:struct (destructuring-bind (id &key class slots) (rest sexp)
                    (let ((object (deserialize-struct class slots deserialized-objects)))
@@ -231,7 +239,7 @@
                      (dolist (slot slots)
                        (when (slot-exists-p object (first slot))
                          (setf (slot-value object (first slot))
-                               (deserialize-sexp-internal (rest slot) deserialized-objects))))
+                               (deserialize-sexp-slot object (first slot) (rest slot) deserialized-objects))))
                      object)))
         (:cons (destructuring-bind (id cons-car cons-cdr) (rest sexp)
                  (let ((conspair (cons nil nil)))
@@ -262,3 +270,14 @@
                      (error "Do not know how to deserialize struct ~S with non-default constructor"
                             struct-symbol))))
     object))
+
+(defgeneric deserialize-sexp-slot (class slot-name slot-value deserialized-objects)
+  (:documentation "Read and return SLOT-VALUE, which corresponds to CLASS's SLOT-NAME. "))
+
+(defmethod deserialize-sexp-slot ((object standard-object) slot-name slot-value deserialized-objects)
+  (declare (ignore object slot-name))
+  (deserialize-sexp-internal slot-value deserialized-objects))
+
+(defmethod deserialize-sexp-slot ((object structure-object) slot-name slot-value deserialized-objects)
+  (declare (ignore object slot-name))
+  (deserialize-sexp-internal slot-value deserialized-objects))

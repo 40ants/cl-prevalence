@@ -16,6 +16,12 @@
 (defgeneric serialize-xml-internal (object stream serialization-state)
   (:documentation "Write a serialized version of object to stream using XML"))
 
+(defgeneric serialize-xml-slot (object slot-name stream serialization-state)
+  (:documentation "Write a serialized version of OBJECT's SLOT-NAME to STREAM using XML.")
+  (:method ((object standard-object) slot-name stream serialization-state)
+    (serialize-xml-internal (slot-value object slot-name)
+                            stream serialization-state)))
+
 (defun print-symbol-xml (symbol stream)
   (let ((package (symbol-package symbol))
 	(name (prin1-to-string symbol)))
@@ -192,7 +198,7 @@
                     (write-string "<SLOT NAME=\"" stream)
                     (print-symbol-xml slot stream)
                     (write-string "\">" stream)
-                    (serialize-xml-internal (slot-value object slot) stream serialization-state)
+                    (serialize-xml-slot object slot stream serialization-state)
                     (write-string "</SLOT>" stream)))
 	(write-string "</OBJECT>" stream)))))
 

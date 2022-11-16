@@ -15,7 +15,9 @@
   (:export
    #:serializable-slots
    #:serialize-xml #:serialize-sexp
+   #:serialize-xml-slot #:serialize-sexp-slot
    #:deserialize-xml #:deserialize-sexp
+   #:deserialize-sexp-slot              ; TODO: Enable XML custom slot deserialization.
    #:make-serialization-state
    #:reset-known-slots)
   (:documentation "XML and s-expression based serialization for Common Lisp and CLOS"))
