@@ -305,6 +305,23 @@
 	     (equal (get-bar foobar) (get-bar *foobar*))
 	     (eq (class-of foobar) (class-of *foobar*))))))
 
+(defclass custom-foobar ()
+  ((foo :accessor get-foo :initarg :foo)
+   (bar :accessor get-bar :initarg :bar)))
+
+(defparameter *custom-foobar* (make-instance 'foobar :foo 200 :bar 300))
+
+(defmethod serialize-slot-sexp ((object custom-foobar) (slot (eql 'bar)) stream serialization-state)
+  (princ-to-string (slot-value object 'bar)))
+(defmethod deserialize-slot-sexp ((object custom-foobar) (slot (eql 'bar)) stream serialization-state)
+  (read-from-string (slot-value object 'bar)))
+
+(test test-custom-objects-1
+  (let ((custom-foobar (serialize-and-deserialize-sexp *custom-foobar*)))
+    (is (and (equal (get-foo custom-foobar) (get-foo *custom-foobar*))
+	     (equal (get-bar custom-foobar) (get-bar *custom-foobar*))
+	     (eq (class-of custom-foobar) (class-of *custom-foobar*))))))
+
 ;; standard structs
 
 (defstruct foobaz
