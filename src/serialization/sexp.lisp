@@ -245,47 +245,6 @@ s-expressions."))
                    (rplacd conspair (deserialize-sexp-internal cons-cdr deserialized-objects)))))
         (:ref (gethash (rest sexp) deserialized-objects)))))
 
-(defun get-class (class-specifier)
-  (if (classp class-specifier)
-      class-specifier
-      (find-class class-specifier)))
-
-(defgeneric get-slot-definition (class slot-name) ; From moptilities
-  (:documentation "Returns the slot-definition for the slot named `slot-name` in the class specified by `class-specifier`. Also returns \(as a second value\) true if the slot is an indirect slot of the class.")
-  (:method ((class-specifier t) slot-name)
-    (let ((class (get-class class-specifier)))
-      (let* ((indirect-slot? nil)
-             (slot-info
-               (or (find slot-name (class-direct-slots class)
-                         :key #'slot-definition-name)
-                   (and (setf indirect-slot? t)
-                        (find slot-name (class-slots class)
-                              :key #'slot-definition-name)))))
-        (values slot-info indirect-slot?)))))
-
-(defgeneric slot-properties (class-specifier slot-name) ; From moptilities
-  (:documentation "Returns a property list describing the slot named slot-name in class-specifier.")
-  (:method ((class symbol) slot-name)
-           (slot-properties (find-class class) slot-name))
-  (:method ((object standard-object) slot-name)
-           (slot-properties (class-of object) slot-name))
-  (:method ((class class) slot-name)
-           (declare (ignorable slot-name))
-           (multiple-value-bind (slot-info indirect-slot?)
-                                (get-slot-definition class slot-name)
-             `(:name ,(slot-definition-name slot-info)
-                     ,@(when (eq (slot-definition-allocation slot-info) :class)
-                         `(:allocation ,(slot-definition-allocation slot-info)))
-                     :initargs ,(slot-definition-initargs slot-info)
-                     :initform ,(slot-definition-initform slot-info)
-                     ,@(when (and (not (eq (slot-definition-type slot-info) t))
-                                  (not (eq (slot-definition-type slot-info) nil)))
-                         `(:type ,(slot-definition-type slot-info)))
-                     ,@(unless indirect-slot?
-                         `(:readers ,(slot-definition-readers slot-info)
-                                    :writers ,(slot-definition-writers slot-info)))
-                     :documentation ,(documentation slot-info t)))))
-
 (defgeneric deserialize-class (class-symbol slots deserialized-objects)
   (:documentation "Read and return an the instance corresponding to CLASS-SYMBOL with SLOTS.
 SLOTS is a list of pairs: the first element is the slot name (a symbol) and the
@@ -302,7 +261,7 @@ second element its value."))
                                     (lambda (slot-name+value)
                                       (let* ((slot-name (first slot-name+value))
                                              (slot-val (rest slot-name+value))
-                                             (initarg (first (getf (slot-properties class-symbol slot-name) :initargs))))
+                                             (initarg (first (getf (mopu:slot-properties class-symbol slot-name) :initargs))))
                                         (if initarg
                                             (list initarg
                                                   (deserialize-sexp-slot (find-class class-symbol) slot-name slot-val deserialized-objects))
@@ -312,7 +271,7 @@ second element its value."))
       (let ((slot-name (first slot-name+value))
             (slot-val (rest slot-name+value)))
         (when (slot-exists-p instance slot-name)
-          (let ((writer (first (getf (slot-properties class-symbol slot-name) :writers)))
+          (let ((writer (first (getf (mopu:slot-properties class-symbol slot-name) :writers)))
                 (value (deserialize-sexp-slot instance slot-name slot-val deserialized-objects)))
             (if writer
                 (funcall (fdefinition writer) value instance)
