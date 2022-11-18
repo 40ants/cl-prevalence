@@ -11,7 +11,7 @@
 ;;;; (http://opensource.franz.com/preamble.html), also known as the LLGPL.
 
 (defpackage :s-serialization
-  (:use :cl)
+  (:use :c2cl)
   (:export
    #:serializable-slots
    #:serialize-xml #:serialize-sexp
