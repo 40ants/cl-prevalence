@@ -313,12 +313,8 @@ s-expressions."))
     object))
 
 (defgeneric deserialize-sexp-slot (class slot-name slot-value deserialized-objects)
-  (:documentation "Read and return SLOT-VALUE, which corresponds to CLASS's SLOT-NAME. "))
+  (:documentation "Read and return SLOT-VALUE, which corresponds to CLASS's SLOT-NAME."))
 
-(defmethod deserialize-sexp-slot ((object standard-object) slot-name slot-value deserialized-objects)
-  (declare (ignore object slot-name))
-  (deserialize-sexp-internal slot-value deserialized-objects))
-
-(defmethod deserialize-sexp-slot ((object structure-object) slot-name slot-value deserialized-objects)
-  (declare (ignore object slot-name))
+(defmethod deserialize-sexp-slot ((target t) slot-name slot-value deserialized-objects)
+  (declare (ignore target slot-name))
   (deserialize-sexp-internal slot-value deserialized-objects))
