@@ -228,10 +228,6 @@ s-expressions."))
         (:object (destructuring-bind (id &key class slots) (rest sexp)
                    (let ((object (deserialize-class class slots deserialized-objects)))
                      (setf (gethash id deserialized-objects) object)
-                     (dolist (slot slots)
-                       (when (slot-exists-p object (first slot))
-                         (setf (slot-value object (first slot))
-                               (deserialize-sexp-slot object (first slot) (rest slot) deserialized-objects))))
                      object)))
         (:struct (destructuring-bind (id &key class slots) (rest sexp)
                    (let ((object (deserialize-struct class slots deserialized-objects)))
@@ -291,11 +287,37 @@ s-expressions."))
                      :documentation ,(documentation slot-info t)))))
 
 (defgeneric deserialize-class (class-symbol slots deserialized-objects)
-  (:documentation "Read and return an the instance corresponding to CLASS-SYMBOL with SLOTS."))
+  (:documentation "Read and return an the instance corresponding to CLASS-SYMBOL with SLOTS.
+SLOTS is a list of pairs: the first element is the slot name (a symbol) and the
+second element its value."))
 
 (defmethod deserialize-class ((class-symbol t) slots deserialized-objects)
-  (let ((object (make-instance class-symbol)))
-    object))
+  (let* ((no-initarg-slots '())
+         (instance (apply 'make-instance
+                          class-symbol
+                          (apply
+                           'append
+                           (delete nil
+                                   (mapcar
+                                    (lambda (slot-name+value)
+                                      (let* ((slot-name (first slot-name+value))
+                                             (slot-val (rest slot-name+value))
+                                             (initarg (first (getf (slot-properties class-symbol slot-name) :initargs))))
+                                        (if initarg
+                                            (list initarg
+                                                  (deserialize-sexp-slot (find-class class-symbol) slot-name slot-val deserialized-objects))
+                                            (push slot-name+value no-initarg-slots))))
+                                    slots))))))
+    (dolist (slot-name+value no-initarg-slots)
+      (let ((slot-name (first slot-name+value))
+            (slot-val (rest slot-name+value)))
+        (when (slot-exists-p instance slot-name)
+          (let ((writer (first (getf (slot-properties class-symbol slot-name) :writers)))
+                (value (deserialize-sexp-slot instance slot-name slot-val deserialized-objects)))
+            (if writer
+                (funcall (fdefinition writer) value instance)
+                (setf (slot-value instance slot-name) value))))))
+    instance))
 
 (defgeneric deserialize-struct (struct-symbol slots deserialized-objects)
   (:documentation "Read and return an the instance corresponding to STRUCT-SYMBOL with SLOTS."))

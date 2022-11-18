@@ -322,6 +322,18 @@
 	     (equal (get-bar custom-foobar) (get-bar *custom-foobar*))
 	     (eq (class-of custom-foobar) (class-of *custom-foobar*))))))
 
+(defclass foobar-reqarg ()
+  ((foo :accessor get-foo :initarg :foo :initform (error "foo arg required"))
+   (bar :accessor get-bar :initarg :bar)))
+
+(defparameter *foobar-reqarg* (make-instance 'foobar-reqarg :foo 1000 :bar "Bar"))
+
+(test test-reqarg-objects-1
+  (let ((foobar (serialize-and-deserialize-sexp *foobar-reqarg*)))
+    (is (and (equal (get-foo foobar) (get-foo *foobar-reqarg*))
+	     (equal (get-bar foobar) (get-bar *foobar-reqarg*))
+	     (eq (class-of foobar) (class-of *foobar-reqarg*))))))
+
 ;; standard structs
 
 (defstruct foobaz
