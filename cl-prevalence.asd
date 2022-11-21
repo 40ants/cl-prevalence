@@ -18,7 +18,7 @@
   :licence "Lesser Lisp General Public License"
   :description "Common Lisp Prevalence Package"
   :long-description "Common Lisp Prevalence is an implementation of Object Prevalence for Common Lisp"
-  :depends-on ("closer-mop"
+  :depends-on ("moptilities"
                "s-xml"
                "s-sysdeps")
   :components 
