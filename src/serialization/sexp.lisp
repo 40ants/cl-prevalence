@@ -265,7 +265,9 @@ second element its value."))
                                     (if initarg
                                         (list initarg
                                               (deserialize-sexp-slot (find-class class-symbol) slot-name slot-val deserialized-objects))
-                                        (push slot-name+value no-initarg-slots))))))
+                                        (progn
+                                          (push slot-name+value no-initarg-slots)
+                                          nil))))))
                             slots)))))
     (dolist (slot-name+value no-initarg-slots)
       (let ((slot-name (first slot-name+value))
