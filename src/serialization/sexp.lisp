@@ -256,18 +256,17 @@ second element its value."))
                           class-symbol
                           (apply
                            'append
-                           (delete nil
-                                   (mapcar
-                                    (lambda (slot-name+value)
-                                      (let* ((slot-name (first slot-name+value))
-                                             (slot-val (rest slot-name+value)))
-                                        (when (find slot-name (mopu:slot-names class-symbol))
-                                          (let ((initarg (first (getf (mopu:slot-properties class-symbol slot-name) :initargs))))
-                                            (if initarg
-                                                (list initarg
-                                                      (deserialize-sexp-slot (find-class class-symbol) slot-name slot-val deserialized-objects))
-                                                (push slot-name+value no-initarg-slots))))))
-                                    slots))))))
+                           (mapcar
+                            (lambda (slot-name+value)
+                              (let* ((slot-name (first slot-name+value))
+                                     (slot-val (rest slot-name+value)))
+                                (when (find slot-name (mopu:slot-names class-symbol))
+                                  (let ((initarg (first (getf (mopu:slot-properties class-symbol slot-name) :initargs))))
+                                    (if initarg
+                                        (list initarg
+                                              (deserialize-sexp-slot (find-class class-symbol) slot-name slot-val deserialized-objects))
+                                        (push slot-name+value no-initarg-slots))))))
+                            slots)))))
     (dolist (slot-name+value no-initarg-slots)
       (let ((slot-name (first slot-name+value))
             (slot-val (rest slot-name+value)))
