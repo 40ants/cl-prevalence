@@ -56,7 +56,7 @@
                                    (execute prevalence-system transaction)))))))
 
 (defun stop-slave-server (server-thread)
-  (s-sysdeps:stop-process (bt:thread-name server-thread))
+  (s-sysdeps:stop-process (bt2:thread-name server-thread))
   (values))
 
 ;;;; eof
